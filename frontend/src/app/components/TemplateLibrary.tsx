@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { FieldConfig, FormTemplate } from '../types/form';
+import { FilterControls, Filter, FilterOption } from './FilterControls';
 
 // Local type that omits `id` for fields (template fields get fresh ids when used)
-type TemplateData = Omit<FormTemplate, 'fields'> & {
+export type TemplateData = Omit<FormTemplate, 'fields'> & {
   fields: Omit<FieldConfig, 'id'>[];
   category: string;
   icon: string;
@@ -21,7 +22,8 @@ interface TemplateLibraryProps {
 
 export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({ category: 'all' });
+  const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const templates: TemplateData[] = [
@@ -179,25 +181,156 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
   ];
 
   const categories = [
-    { id: 'all', name: 'Alle Kategorien', icon: '📋' },
-    { id: 'hr', name: 'Personal & HR', icon: '👥' },
-    { id: 'contact', name: 'Kontakt', icon: '📞' },
-    { id: 'feedback', name: 'Feedback', icon: '⭐' },
-    { id: 'events', name: 'Events', icon: '🎉' },
-    { id: 'survey', name: 'Umfragen', icon: '📊' }
+    { value: 'all', label: 'Alle Kategorien' },
+    { value: 'hr', label: 'Personal & HR' },
+    { value: 'contact', label: 'Kontakt' },
+    { value: 'feedback', label: 'Feedback' },
+    { value: 'events', label: 'Events' },
+    { value: 'survey', label: 'Umfragen' }
   ];
+
+  const sortOptions: FilterOption[] = [
+    { value: 'popular', label: 'Beliebtheit' },
+    { value: 'recent', label: 'Neueste' },
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'name-desc', label: 'Name (Z-A)' },
+  ];
+
+  const filters: Filter[] = [
+    {
+      id: 'category',
+      label: 'Kategorie',
+      options: categories,
+    }
+  ];
+  
+  const handleFilterChange = (filterId: string, value: string) => {
+    setSelectedFilters(prev => ({...prev, [filterId]: value}));
+  };
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
+    const matchesCategory = selectedFilters.category === 'all' || template.category === selectedFilters.category;
     
     return matchesSearch && matchesCategory;
   });
 
+  const sortedTemplates = [...filteredTemplates].sort((a, b) => {
+    switch (sortBy) {
+        case 'recent':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'name-asc':
+            return a.name.localeCompare(b.name);
+        case 'name-desc':
+            return b.name.localeCompare(a.name);
+        case 'popular':
+        default:
+            return (b.usageCount ?? 0) - (a.usageCount ?? 0);
+    }
+  });
+
   const popularTemplates = templates.filter(t => t.isPopular).slice(0, 3);
+
+  const renderTemplateCard = (template: TemplateData) => (
+    <div
+      key={template.id}
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group"
+      onClick={() => onUseTemplate(template)}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="text-3xl">{template.icon}</div>
+        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+           {template.usageCount} mal verwendet
+         </div>
+      </div>
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        {template.name}
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {template.description}
+      </p>
+      <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-1">
+          {template.tags.slice(0, 2).map((tag) => (
+            <span key={tag} className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-md">
+              {tag}
+            </span>
+          ))}
+        </div>
+        <button
+            onClick={(e) => {
+                e.stopPropagation();
+                onPreviewTemplate(template);
+            }}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            title="Vorschau"
+        >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderTemplateListItem = (template: TemplateData) => (
+     <div key={template.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
+          onClick={() => onUseTemplate(template)}
+     >
+         <div className="flex items-center justify-between">
+             <div className="flex items-center space-x-4">
+                 <div className="text-2xl">{template.icon}</div>
+                 <div>
+                     <div className="flex items-center space-x-2 mb-1">
+                         <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                             {template.name}
+                         </h3>
+                         {template.isPopular && (
+                             <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-md font-medium">
+                                 Beliebt
+                             </span>
+                         )}
+                     </div>
+                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                         {template.description}
+                     </p>
+                     <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                         <span>{template.fields.length} Felder</span>
+                         <span>{template.usageCount} mal verwendet</span>
+                         <div className="flex flex-wrap gap-1">
+                             {template.tags.slice(0, 3).map((tag) => (
+                                 <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
+                                     {tag}
+                                 </span>
+                             ))}
+                         </div>
+                     </div>
+                 </div>
+             </div>
+             <div className="flex items-center space-x-2">
+                 <button
+                     onClick={(e) => {
+                         e.stopPropagation();
+                         onPreviewTemplate(template);
+                     }}
+                     className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                     title="Vorschau"
+                 >
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                 </button>
+                 <button
+                     onClick={() => onUseTemplate(template)}
+                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                 >
+                     Verwenden
+                 </button>
+             </div>
+         </div>
+     </div>
+  );
+
 
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-900 overflow-y-auto">
@@ -210,269 +343,100 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
           </p>
         </div>
 
+        <FilterControls
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          filters={filters}
+          selectedFilters={selectedFilters}
+          onFilterChange={handleFilterChange}
+          sortByOptions={sortOptions}
+          currentSortBy={sortBy}
+          onSortByChange={setSortBy}
+        >
+            <div className="hidden lg:flex items-center gap-2">
+                <button 
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    aria-label="Grid View"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z" />
+                    </svg>
+                </button>
+                <button 
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    aria-label="List View"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </FilterControls>
+
         {/* Popular Templates */}
-        {searchTerm === '' && selectedCategory === 'all' && (
+        {searchTerm === '' && selectedFilters.category === 'all' && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
               <span className="mr-2">🔥</span>
               Beliebte Vorlagen
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              {popularTemplates.map((template) => (
-                <div
-                  key={template.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                  onClick={() => onUseTemplate(template)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="text-3xl">{template.icon}</div>
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {template.usageCount} mal verwendet
-                    </div>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {template.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {template.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-1">
-                      {template.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-md">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPreviewTemplate(template);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      title="Vorschau"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {popularTemplates.map(template => renderTemplateCard(template))}
             </div>
           </div>
         )}
 
-        {/* Search and Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Search */}
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Vorlagen durchsuchen..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <span>{category.icon}</span>
-                    <span className="text-sm">{category.name}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                  title="Rasteransicht"
+        {/* All Templates Header */}
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Alle Vorlagen</h2>
+            <div className="flex items-center gap-2 lg:hidden">
+                 <button 
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z" />
+                    </svg>
                 </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                  title="Listenansicht"
+                <button 
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
                 </button>
-              </div>
             </div>
-          </div>
         </div>
 
-        {/* Results */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {filteredTemplates.length} Vorlagen gefunden
-          </p>
-        </div>
-
-        {/* Templates Grid/List */}
-        {viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                onClick={() => onUseTemplate(template)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-2xl">{template.icon}</div>
-                  <div className="flex items-center space-x-2">
-                    {template.isPopular && (
-                      <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-md font-medium">
-                        Beliebt
-                      </span>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPreviewTemplate(template);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      title="Vorschau"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {template.name}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {template.description}
-                </p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {template.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-md">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>{template.fields.length} Felder</span>
-                  <span>{template.usageCount} mal verwendet</span>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Templates Grid / List */}
+        {sortedTemplates.length > 0 ? (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedTemplates.map((template) => renderTemplateCard(template))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sortedTemplates.map((template) => renderTemplateListItem(template))}
+            </div>
+          )
         ) : (
-          <div className="space-y-4">
-            {filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer group"
-                onClick={() => onUseTemplate(template)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl">{template.icon}</div>
-                    <div>
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {template.name}
-                        </h3>
-                        {template.isPopular && (
-                          <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs rounded-md font-medium">
-                            Beliebt
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {template.description}
-                      </p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span>{template.fields.length} Felder</span>
-                        <span>{template.usageCount} mal verwendet</span>
-                        <div className="flex flex-wrap gap-1">
-                          {template.tags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onPreviewTemplate(template);
-                      }}
-                      className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                      title="Vorschau"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => onUseTemplate(template)}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                    >
-                      Verwenden
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {filteredTemplates.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Keine Vorlagen gefunden
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Versuchen Sie andere Suchbegriffe oder wählen Sie eine andere Kategorie.
-            </p>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedCategory('all');
-              }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Filter zurücksetzen
-            </button>
-          </div>
+            <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Keine Vorlagen gefunden</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Keine Vorlagen gefunden. Versuchen Sie es mit anderen Suchbegriffen.</p>
+                <button
+                    onClick={() => {
+                        setSearchTerm('');
+                        setSelectedFilters({ category: 'all' });
+                    }}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                    Filter zurücksetzen
+                </button>
+            </div>
         )}
       </div>
     </div>
