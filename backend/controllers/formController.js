@@ -21,4 +21,16 @@ exports.saveForm = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
+};
+
+exports.getForms = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const forms = await db.query('SELECT * FROM forms WHERE user_id = $1 ORDER BY updated_at DESC', [userId]);
+    res.json(forms.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 }; 
