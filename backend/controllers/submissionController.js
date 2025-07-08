@@ -32,3 +32,30 @@ exports.createSubmission = async (req, res) => {
     res.status(500).send('Server Error');
   }
 }; 
+
+exports.getFormSubmissions = async (req, res) => {
+  const { form_id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // First, verify the user owns the form
+    const form = await db.query('SELECT user_id FROM forms WHERE id = $1', [form_id]);
+    if (form.rows.length === 0) {
+      return res.status(404).json({ msg: 'Form not found' });
+    }
+    if (form.rows[0].user_id.toString() !== userId) {
+      return res.status(401).json({ msg: 'User not authorized to view these submissions' });
+    }
+
+    // Fetch submissions for the form
+    const submissions = await db.query(
+      'SELECT id, data, submitted_at FROM submissions WHERE form_id = $1 ORDER BY submitted_at DESC', 
+      [form_id]
+    );
+
+    res.json(submissions.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+}; 
