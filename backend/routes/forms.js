@@ -13,4 +13,9 @@ router.post('/', auth, formController.saveForm);
 // @access  Private
 router.get('/', auth, formController.getForms);
 
+// @route   DELETE api/forms/:id
+// @desc    Delete a form
+// @access  Private
+router.delete('/:id', auth, formController.deleteForm);
+
 module.exports = router; 
