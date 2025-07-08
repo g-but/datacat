@@ -12,7 +12,7 @@ import { useFormValidation } from '../hooks/useFormValidation';
 import { useAutoSave } from '../hooks/useAutoSave';
 // The useTemplateManager is no longer needed as we save to the backend.
 // import { useTemplateManager } from '../hooks/useTemplateManager';
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
 import { ModernFormBuilder } from './ModernFormBuilder';
 import { FormPreviewModal } from './FormPreviewModal';
@@ -140,12 +140,13 @@ export function ModernFormBuilderLayout({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const flatFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
-    const oldIndex = flatFields.findIndex((f) => f.id === active.id);
-    const newIndex = flatFields.findIndex((f) => f.id === over.id);
-    if (oldIndex !== -1 && newIndex !== -1) {
-      moveField(oldIndex, newIndex);
+    if (over && active.id !== over.id) {
+      const flatFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
+      const oldIndex = flatFields.findIndex((f) => f.id === active.id);
+      const newIndex = flatFields.findIndex((f) => f.id === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        moveField(oldIndex, newIndex);
+      }
     }
   };
 
