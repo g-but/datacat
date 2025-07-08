@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 
 interface TopNavigationProps {
-  currentView: 'builder' | 'templates' | 'saved-forms';
-  onViewChange: (view: 'builder' | 'templates' | 'saved-forms') => void;
+  currentView?: 'builder' | 'templates' | 'saved-forms';
   onNewForm: () => void;
   onSaveForm: () => void;
   onPreviewForm: () => void;
@@ -14,8 +13,7 @@ interface TopNavigationProps {
 }
 
 export function TopNavigation({
-  currentView,
-  onViewChange,
+  currentView = 'builder',
   onNewForm,
   onSaveForm,
   onPreviewForm,
@@ -60,7 +58,11 @@ export function TopNavigation({
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onViewChange(item.id as any)}
+                onClick={() => {
+                  if (item.id === 'templates') window.location.href = '/templates';
+                  else if (item.id === 'saved-forms') window.location.href = '/forms';
+                  else if (item.id === 'builder') window.location.href = '/builder';
+                }}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   currentView === item.id
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'

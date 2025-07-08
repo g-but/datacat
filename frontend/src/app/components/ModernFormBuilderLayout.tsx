@@ -556,8 +556,74 @@ export function ModernFormBuilderLayout({
                       Erstellen Sie Ihr erstes Feld
                     </h3>
                     <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                      Verwenden Sie die Sidebar, um Felder hinzuzufügen, Vorlagen zu verwenden oder Multi-Step zu aktivieren.
+                      Beginnen Sie mit einem Feld oder wählen Sie eine Vorlage aus der Bibliothek.
                     </p>
+                    
+                    {/* Direct Action Buttons */}
+                    <div className="flex flex-col items-center space-y-4">
+                      {/* Quick Field Buttons */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => createQuickField('text')}
+                          className="flex flex-col items-center px-4 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                        >
+                          <span className="text-2xl mb-1">📝</span>
+                          <span className="text-sm font-medium">Text-Feld</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createQuickField('email')}
+                          className="flex flex-col items-center px-4 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                        >
+                          <span className="text-2xl mb-1">📧</span>
+                          <span className="text-sm font-medium">E-Mail</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createQuickField('select')}
+                          className="flex flex-col items-center px-4 py-3 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                        >
+                          <span className="text-2xl mb-1">📋</span>
+                          <span className="text-sm font-medium">Auswahl</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createQuickField('textarea')}
+                          className="flex flex-col items-center px-4 py-3 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                        >
+                          <span className="text-2xl mb-1">📄</span>
+                          <span className="text-sm font-medium">Textbereich</span>
+                        </button>
+                      </div>
+                      
+                      {/* Divider */}
+                      <div className="flex items-center w-full max-w-md">
+                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+                        <span className="px-3 text-sm text-gray-500 dark:text-gray-400">oder</span>
+                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
+                      </div>
+                      
+                      {/* Template and Multi-Step Options */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentView('templates')}
+                          className="flex items-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          <span className="mr-2">📚</span>
+                          <span className="font-medium">Vorlagen durchsuchen</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleToggleMultiStep}
+                          className="flex items-center px-6 py-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                        >
+                          <span className="mr-2">🔄</span>
+                          <span className="font-medium">Multi-Step erstellen</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
