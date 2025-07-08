@@ -10,13 +10,15 @@ import { SavedForms, SavedForm } from './SavedForms';
 import { FieldConfig, FormData, FormStep, FormTemplate } from '../types/form';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { useAutoSave } from '../hooks/useAutoSave';
-import { useTemplateManager } from '../hooks/useTemplateManager';
+// The useTemplateManager is no longer needed as we save to the backend.
+// import { useTemplateManager } from '../hooks/useTemplateManager';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
 import { ModernFormBuilder } from './ModernFormBuilder';
 import { FormPreviewModal } from './FormPreviewModal';
 import { TemplatePreviewModal } from './TemplatePreviewModal';
 import AboutPage from '../about/page';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 interface ModernFormBuilderLayoutProps {
   initialState?: Partial<ReturnType<typeof useFormBuilderStore.getState>>;
@@ -40,14 +42,21 @@ export function ModernFormBuilderLayout({
     removeField,
     duplicateField
   } = useFormBuilderStore();
+  const { token } = useAuth(); // Use the auth context
+
+  // Lifted state from SavedForms
+  const [savedForms, setSavedForms] = useState<SavedForm[]>([]);
+  const [formsLoading, setFormsLoading] = useState(true);
 
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>(undefined);
   const [currentView, setCurrentView] = useState<'builder' | 'templates' | 'saved-forms' | 'about'>('builder');
   const [formTitle, setFormTitle] = useState('Neues Formular');
+  const [formDescription, setFormDescription] = useState(''); // Add description state
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedTemplatePreview, setSelectedTemplatePreview] = useState<TemplateData | SavedForm | null>(null);
+  const [editingFormId, setEditingFormId] = useState<string | null>(null);
 
   useEffect(() => {
     setInitialState({
@@ -60,10 +69,51 @@ export function ModernFormBuilderLayout({
     }
   }, [initialState, setInitialState]);
 
+  // Lifted effect from SavedForms
+  useEffect(() => {
+    const fetchForms = async () => {
+      if (currentView !== 'saved-forms' || !token) {
+        // We only fetch when the view is active and user is logged in
+        setFormsLoading(false);
+        return;
+      }
+      try {
+        setFormsLoading(true);
+        const res = await fetch('/api/forms', {
+          headers: { 'x-auth-token': token },
+        });
+        if (!res.ok) throw new Error('Failed to fetch forms');
+        const data = await res.json();
+        const parsedData = data.map((form: any): SavedForm => ({
+          id: form.id,
+          title: form.title,
+          description: form.description,
+          fields: form.structure.fields || [],
+          steps: form.structure.steps || [],
+          isMultiStep: form.structure.isMultiStep || false,
+          createdAt: form.created_at,
+          updatedAt: form.updated_at,
+          status: form.status,
+          submissionCount: form.submission_count || 0,
+          tags: form.structure.tags || [],
+          category: form.structure.category,
+        }));
+        setSavedForms(parsedData);
+      } catch (error) {
+        console.error('Error fetching forms:', error);
+      } finally {
+        setFormsLoading(false);
+      }
+    };
+
+    fetchForms();
+  }, [token, currentView]);
+
+
   const allFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
   const { hasErrors, errors } = useFormValidation(allFields);
   const { saveNow, clearSavedData } = useAutoSave(formData, allFields);
-  const { saveTemplate } = useTemplateManager();
+  // const { saveTemplate } = useTemplateManager(); // This line is now removed.
 
   const getStepsWithErrors = useCallback((): Set<string> => {
     const stepErrorSet = new Set<string>();
@@ -107,16 +157,62 @@ export function ModernFormBuilderLayout({
     }
   };
 
-  const handleSaveAsTemplate = async (name: string, description: string) => {
-    await saveTemplate(name, description, allFields);
-    setShowSaveTemplateModal(false);
+  const handleSaveForm = async (name: string, description: string) => {
+    if (!token) {
+      console.error("No token found. Please log in.");
+      return;
+    }
+
+    const formPayload = {
+      title: name,
+      description: description,
+      structure: { fields: allFields, steps, isMultiStep, tags: [] /* TODO: Implement tag editing */ },
+      status: 'draft', // Or determine status from UI
+    };
+
+    const isUpdating = !!editingFormId;
+    const url = isUpdating ? `/api/forms/${editingFormId}` : '/api/forms';
+    const method = isUpdating ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: JSON.stringify(formPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${isUpdating ? 'update' : 'save'} form`);
+      }
+      
+      const savedForm = await response.json();
+
+      if (isUpdating) {
+        // Find and update the form in the local state
+        setSavedForms(prev => prev.map(f => f.id === editingFormId ? { ...f, ...savedForm, ...savedForm.structure } : f));
+      } else {
+        // Add the new form to the local state
+        setSavedForms(prev => [savedForm, ...prev]);
+      }
+      
+      setShowSaveTemplateModal(false);
+      setEditingFormId(null); // Reset editing state
+      
+    } catch (error) {
+      console.error(`Error ${isUpdating ? 'updating' : 'saving'} form:`, error);
+    }
   };
 
   const handleNewForm = () => {
     setInitialState({ fields: [], steps: [], isMultiStep: false });
     setFormTitle('Neues Formular');
+    setFormDescription(''); // Reset description for new form
     setHasUnsavedChanges(false);
     setCurrentView('builder');
+    setEditingFormId(null); // Ensure it's null for new forms
   };
 
   const handleUseTemplate = (item: TemplateData | SavedForm) => {
@@ -132,7 +228,81 @@ export function ModernFormBuilderLayout({
       isMultiStep: item.isMultiStep || false,
     });
     setFormTitle(isSavedForm ? item.title : item.name);
+    setFormDescription(item.description || ''); // Set description on load
     setCurrentView('builder');
+    if (isSavedForm) {
+      setEditingFormId(item.id); // Set the ID for editing
+    } else {
+      setEditingFormId(null); // It's a new template, not an existing form
+    }
+  };
+
+  const handleDeleteForm = async (formId: string) => {
+    if (!token) {
+      console.error("No token found. Please log in.");
+      return;
+    }
+
+    // Optional: Add a confirmation dialog here before deleting
+    // if (!confirm('Are you sure you want to delete this form?')) {
+    //   return;
+    // }
+
+    try {
+      const response = await fetch(`/api/forms/${formId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-auth-token': token,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete form');
+      }
+
+      // To update the UI, we would need to refetch the forms in SavedForms
+      // or pass down a function to update the state here.
+      // For now, the user will see the change on the next refresh/re-render of SavedForms.
+      // A better implementation would involve lifting the forms state up to this component.
+      console.log('Form deleted successfully');
+
+      // Update state directly to trigger UI refresh
+      setSavedForms(prevForms => prevForms.filter(form => form.id !== formId));
+
+    } catch (error) {
+      console.error('Error deleting form:', error);
+    }
+  };
+
+  const handleStatusChange = async (formId: string, newStatus: 'draft' | 'published' | 'archived') => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`/api/forms/${formId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update form status');
+      }
+      
+      const updatedForm = await response.json();
+      
+      // Update state directly to trigger UI refresh
+      setSavedForms(prevForms => 
+        prevForms.map(form => 
+          form.id === formId ? { ...form, status: updatedForm.status, updatedAt: new Date().toISOString() } : form
+        )
+      );
+      // Maybe show a success notification
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const renderContent = () => {
@@ -140,7 +310,15 @@ export function ModernFormBuilderLayout({
       case 'templates':
         return <TemplateLibrary onUseTemplate={handleUseTemplate} onPreviewTemplate={setSelectedTemplatePreview} />;
       case 'saved-forms':
-        return <SavedForms onLoadForm={handleUseTemplate} onDuplicateForm={() => {}} onDeleteForm={() => {}} onPreviewForm={setSelectedTemplatePreview} />;
+        return <SavedForms 
+                  forms={savedForms} 
+                  loading={formsLoading}
+                  onLoadForm={handleUseTemplate} 
+                  onDuplicateForm={() => {}} 
+                  onDeleteForm={handleDeleteForm} 
+                  onPreviewForm={setSelectedTemplatePreview} 
+                  onStatusChange={handleStatusChange} // Pass down the new handler
+                />;
       case 'about':
         return <AboutPage />;
       case 'builder':
@@ -148,7 +326,7 @@ export function ModernFormBuilderLayout({
         return (
           <div className="flex flex-1 h-full overflow-hidden">
             <ModernSidebar
-              onSaveTemplate={() => setShowSaveTemplateModal(true)}
+              onSaveForm={() => setShowSaveTemplateModal(true)} // Rename prop here
               selectedFieldId={selectedFieldId}
               onFieldSelect={setSelectedFieldId}
               onFieldUpdate={updateField}
@@ -210,9 +388,14 @@ export function ModernFormBuilderLayout({
         {showSaveTemplateModal && (
           <SaveTemplateModal
             isOpen={showSaveTemplateModal}
-            onSave={handleSaveAsTemplate}
-            onClose={() => setShowSaveTemplateModal(false)}
+            onSave={handleSaveForm} // Use the new handler
+            onClose={() => {
+              setShowSaveTemplateModal(false);
+              setEditingFormId(null); // Also reset on close
+            }}
             fields={allFields}
+            initialName={formTitle}
+            initialDescription={formDescription} // Use state for description
           />
         )}
         

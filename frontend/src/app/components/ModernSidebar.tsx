@@ -17,7 +17,7 @@ interface FieldTypeOption {
 }
 
 interface ModernSidebarProps {
-  onSaveTemplate: () => void;
+  onSaveForm: () => void; // Rename prop in interface
   selectedFieldId?: string;
   onFieldSelect: (fieldId?: string) => void;
   onFieldUpdate: (fieldId: string, updates: Partial<FieldConfig>) => void;
@@ -111,7 +111,7 @@ function SortableSidebarItem({
 
 
 export function ModernSidebar({
-  onSaveTemplate,
+  onSaveForm, // Use new prop name
   selectedFieldId,
   onFieldSelect,
   onFieldUpdate,
@@ -351,6 +351,14 @@ export function ModernSidebar({
           onUpdate={(updates) => onFieldUpdate(selectedField.id, updates)}
         />
       )}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={onSaveForm} // Use new prop name here
+          className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Formular speichern
+        </button>
+      </div>
     </aside>
   );
 }

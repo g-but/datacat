@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import { Fragment, useState } from 'react';
+import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
+import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // Define types for navigation items
 type NavItem = {
@@ -42,6 +46,16 @@ interface TopNavigationProps {
   hasUnsavedChanges: boolean;
 }
 
+const navigation = [
+    { name: 'Builder', href: '/builder' },
+    { name: 'Forms', href: '/forms' },
+    { name: 'Templates', href: '/templates' },
+    { name: 'About', href: '/about' },
+];
+
+function classNames(...classes: string[]) {
+    return classes.filter(Boolean).join(' ')
+}
 
 export function TopNavigation({
   currentView,
@@ -53,6 +67,9 @@ export function TopNavigation({
   onTitleChange,
   hasUnsavedChanges,
 }: TopNavigationProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { token, user, logout, loading } = useAuth(); // Use the auth context
+
   const [isMegaMenuOpen, setMegaMenuOpen] = useState(false);
 
   const primaryLinks: NavItem[] = [
@@ -67,7 +84,7 @@ export function TopNavigation({
   };
   
   return (
-    <header className="relative bg-white dark:bg-gray-800 shadow-md">
+    <header className="relative isolate z-10 bg-white dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center py-4 md:justify-start md:space-x-10">
           
@@ -75,7 +92,6 @@ export function TopNavigation({
           <div className="flex justify-start lg:w-0 lg:flex-1">
             <Link href="/builder" passHref>
               <a onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
-                <Image src="/logo.svg" alt="Form Builder" width={40} height={40} />
                 <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
               </a>
             </Link>
@@ -84,7 +100,7 @@ export function TopNavigation({
           {/* Mobile menu button */}
           <div className="-mr-2 -my-2 md:hidden">
             <button
-              onClick={() => setMegaMenuOpen(!isMegaMenuOpen)}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="bg-white dark:bg-gray-800 rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
             >
               <span className="sr-only">Menü öffnen</span>
@@ -191,6 +207,79 @@ export function TopNavigation({
           )}
         </div>
       </div>
+      <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
+        <Dialog.Panel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+            <div className="flex items-center justify-between">
+              <Link href="/" className="-m-1.5 p-1.5">
+                <span className="sr-only">Your Company</span>
+                <img
+                  className="h-8 w-auto"
+                  src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+                  alt=""
+                />
+              </Link>
+              <button
+                type="button"
+                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="sr-only">Close menu</span>
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="mt-6 flow-root">
+              <div className="-my-6 divide-y divide-gray-500/10">
+                <div className="space-y-2 py-6">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+                <div className="py-6">
+                  <ThemeToggle />
+                  {!loading && (
+                    <>
+                      {token && user ? (
+                        <button
+                          onClick={() => {
+                            logout();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
+                        >
+                          Log out
+                        </button>
+                      ) : (
+                        <>
+                          <Link
+                            href="/login"
+                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Log in
+                          </Link>
+                          <Link
+                            href="/register"
+                             className="mt-2 -mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                             onClick={() => setMobileMenuOpen(false)}
+                          >
+                            Register
+                          </Link>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+        </Dialog.Panel>
+      </Dialog>
     </header>
   );
 }
