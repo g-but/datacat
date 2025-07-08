@@ -22,6 +22,9 @@ app.use('/api/user', require('./routes/user'));
 // Use Forms Routes
 app.use('/api/forms', require('./routes/forms'));
 
+// Use Submissions Routes
+app.use('/api/submissions', require('./routes/submissions'));
+
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {

@@ -88,4 +88,24 @@ exports.updateForm = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
+};
+
+exports.getPublicForm = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const form = await db.query(
+      "SELECT id, title, description, structure FROM forms WHERE id = $1 AND status = 'published'",
+      [id]
+    );
+
+    if (form.rows.length === 0) {
+      return res.status(404).json({ msg: 'Published form not found' });
+    }
+
+    res.json(form.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 }; 

@@ -3,6 +3,11 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const formController = require('../controllers/formController');
 
+// @route   GET api/forms/public/:id
+// @desc    Get a single published form for public viewing
+// @access  Public
+router.get('/public/:id', formController.getPublicForm);
+
 // @route   POST api/forms
 // @desc    Save a new form
 // @access  Private

@@ -38,4 +38,13 @@ CREATE TABLE forms (
 CREATE TRIGGER set_timestamp_forms
 BEFORE UPDATE ON forms
 FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_timestamp(); 
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+-- Submissions table
+CREATE TABLE submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    form_id UUID NOT NULL REFERENCES forms(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- The user who OWNS the form
+    data JSONB NOT NULL,
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+); 
