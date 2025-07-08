@@ -28,4 +28,9 @@ router.delete('/:id', auth, formController.deleteForm);
 // @access  Private
 router.put('/:id', auth, formController.updateForm);
 
+// @route   PATCH api/forms/:id/status
+// @desc    Update a form's status
+// @access  Private
+router.patch('/:id/status', auth, formController.updateFormStatus);
+
 module.exports = router; 

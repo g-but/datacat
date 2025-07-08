@@ -90,6 +90,38 @@ exports.updateForm = async (req, res) => {
   }
 };
 
+exports.updateFormStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const userId = req.user.id;
+
+  if (!status || !['draft', 'published', 'archived'].includes(status)) {
+    return res.status(400).json({ msg: 'Invalid status provided' });
+  }
+
+  try {
+    const form = await db.query('SELECT user_id FROM forms WHERE id = $1', [id]);
+
+    if (form.rows.length === 0) {
+      return res.status(404).json({ msg: 'Form not found' });
+    }
+
+    if (form.rows[0].user_id.toString() !== userId) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    const updatedForm = await db.query(
+      `UPDATE forms SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id, status`,
+      [status, id]
+    );
+
+    res.json(updatedForm.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
 exports.getPublicForm = async (req, res) => {
   const { id } = req.params;
 
