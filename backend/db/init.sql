@@ -24,13 +24,13 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 
 -- You can add more tables here as the application grows.
 -- For example, a table for forms:
-/*
 CREATE TABLE forms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     structure JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'draft',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,5 +38,4 @@ CREATE TABLE forms (
 CREATE TRIGGER set_timestamp_forms
 BEFORE UPDATE ON forms
 FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_timestamp();
-*/ 
+EXECUTE PROCEDURE trigger_set_timestamp(); 

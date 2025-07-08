@@ -19,6 +19,9 @@ app.use('/api/auth', require('./routes/auth'));
 // Use User Routes
 app.use('/api/user', require('./routes/user'));
 
+// Use Forms Routes
+app.use('/api/forms', require('./routes/forms'));
+
 const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
