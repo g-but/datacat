@@ -1,23 +1,18 @@
 import React from 'react';
 
-interface ButtonProps {
-  type?: 'button' | 'submit' | 'reset';
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
-  disabled?: boolean;
-  onClick?: () => void;
   children: React.ReactNode;
   className?: string;
 }
 
 export function Button({ 
-  type = 'button', 
   variant = 'primary', 
   size = 'md', 
-  disabled = false, 
-  onClick, 
   children, 
-  className = "" 
+  className = "",
+  ...props 
 }: ButtonProps) {
   const baseClasses = "font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 transform hover:scale-105 active:scale-95";
   
@@ -33,13 +28,11 @@ export function Button({
     outline: "border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-500 backdrop-blur-sm"
   };
   
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed hover:bg-current" : "";
+  const disabledClasses = props.disabled ? "opacity-50 cursor-not-allowed hover:bg-current" : "";
   
   return (
     <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
+      {...props}
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${disabledClasses} ${className}`}
     >
       {children}

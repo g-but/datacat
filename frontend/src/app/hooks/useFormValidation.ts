@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FieldConfig, FormData } from '../types/form';
+import { FieldConfig } from '../types/form';
 
 export interface ValidationError {
   field: string;
@@ -16,7 +16,7 @@ export interface ValidationRule {
 }
 
 export function useFormValidation(fields: FieldConfig[]) {
-  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateField = useCallback((field: FieldConfig, value: string): ValidationError | null => {
     // Required field validation
@@ -84,55 +84,46 @@ export function useFormValidation(fields: FieldConfig[]) {
     return null;
   }, []);
 
-  const validateForm = useCallback((formData: FormData): ValidationError[] => {
-    const newErrors: ValidationError[] = [];
+  const validateForm = useCallback((formData: Record<string, string>) => {
+    const newErrors: Record<string, string> = {};
 
     fields.forEach(field => {
       const value = formData[field.name] || '';
       const error = validateField(field, value);
       if (error) {
-        newErrors.push(error);
+        newErrors[field.name] = error.message;
+      } else {
+        newErrors[field.name] = '';
       }
     });
 
     setErrors(newErrors);
-    return newErrors;
+    return Object.keys(newErrors);
   }, [fields, validateField]);
 
-  const validateSingleField = useCallback((fieldName: string, value: string): ValidationError | null => {
+  const validateSingleField = useCallback((fieldName: string, value: string) => {
     const field = fields.find(f => f.name === fieldName);
-    if (!field) return null;
+    if (!field) return '';
 
     const error = validateField(field, value);
     
-    // Update errors state
-    setErrors(prevErrors => {
-      const filteredErrors = prevErrors.filter(e => e.field !== fieldName);
-      return error ? [...filteredErrors, error] : filteredErrors;
-    });
-
-    return error;
-  }, [fields, validateField]);
+    const newErrors = { ...errors };
+    if (error) {
+      newErrors[fieldName] = error.message;
+    } else {
+      newErrors[fieldName] = '';
+    }
+    
+    setErrors(newErrors);
+    return newErrors[fieldName];
+  }, [fields, errors, validateField]);
 
   const clearErrors = useCallback(() => {
-    setErrors([]);
+    setErrors({});
   }, []);
 
-  const getFieldError = useCallback((fieldName: string): string | null => {
-    const error = errors.find(e => e.field === fieldName);
-    return error ? error.message : null;
-  }, [errors]);
+  const getFieldError = (fieldName: string) => errors[fieldName];
+  const hasErrors = Object.values(errors).some(error => error);
 
-  const hasErrors = errors.length > 0;
-  const isValid = !hasErrors;
-
-  return {
-    errors,
-    validateForm,
-    validateSingleField,
-    clearErrors,
-    getFieldError,
-    hasErrors,
-    isValid
-  };
+  return { validateForm, validateSingleField, getFieldError, hasErrors, errors };
 }

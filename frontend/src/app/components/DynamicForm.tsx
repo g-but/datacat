@@ -80,8 +80,7 @@ export function DynamicForm({ initialFields, onSubmit, onFieldsChange }: Dynamic
   };
 
   const handleCreateGroup = (groupName: string) => {
-    // Groups are managed by individual field assignments
-    console.log('Group created:', groupName);
+    // Group creation side-effects can be handled here if necessary
   };
 
   const handleDeleteGroup = (groupName: string) => {

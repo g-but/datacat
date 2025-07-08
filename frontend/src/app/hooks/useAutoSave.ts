@@ -18,7 +18,7 @@ export function useAutoSave(
     null
   );
   
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveRef = useRef<number>(0);
 
   // Auto-save with debouncing
@@ -70,7 +70,7 @@ export function useAutoSave(
 
   // Get formatted last save time
   const getLastSaveTime = () => {
-    if (!savedData?.timestamp) return null;
+    if (!savedData?.timestamp) return undefined;
     
     const now = Date.now();
     const diff = now - savedData.timestamp;

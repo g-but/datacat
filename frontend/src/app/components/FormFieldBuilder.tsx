@@ -11,7 +11,7 @@ interface FormFieldBuilderProps {
   onBlur: () => void;
   onRemove: () => void;
   onEdit: () => void;
-  error?: string;
+  error?: string | null;
   isEditing?: boolean;
 }
 

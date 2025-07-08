@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { FieldConfig } from '../types/form';
+import { FieldConfig, FieldTemplate } from '../types/form';
+import { EmptyStep } from './EmptyStep';
+import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
-interface ModernFieldBuilderProps {
+export interface ModernFieldBuilderProps {
   field: FieldConfig;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onUpdateField: (updates: Partial<FieldConfig>) => void;
   onRemove: () => void;
   onDuplicate: () => void;
-  error?: string;
+  error?: string | null;
   isDragging?: boolean;
+  dragProps?: any;
 }
 
 export function ModernFieldBuilder({
@@ -22,7 +27,8 @@ export function ModernFieldBuilder({
   onRemove,
   onDuplicate,
   error,
-  isDragging = false
+  isDragging = false,
+  dragProps = {}
 }: ModernFieldBuilderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(field.label);
@@ -57,14 +63,59 @@ export function ModernFieldBuilder({
   };
 
   const updateFieldType = (newType: FieldConfig['type']) => {
-    onUpdateField({ 
+    const fieldDefaults: Record<FieldConfig['type'], Partial<FieldConfig>> = {
+      text: {
+        label: 'Textfeld',
+        placeholder: 'Text eingeben...',
+        options: undefined,
+        rows: undefined,
+      },
+      email: {
+        label: 'E-Mail',
+        placeholder: 'E-Mail eingeben...',
+        options: undefined,
+        rows: undefined,
+      },
+      tel: {
+        label: 'Telefon',
+        placeholder: 'Telefonnummer eingeben...',
+        options: undefined,
+        rows: undefined,
+      },
+      date: {
+        label: 'Datum',
+        placeholder: '',
+        options: undefined,
+        rows: undefined,
+      },
+      select: {
+        label: 'Auswahl',
+        placeholder: undefined,
+        options: [
+          { value: '', label: 'Auswahl treffen' },
+          { value: 'option1', label: 'Option 1' },
+          { value: 'option2', label: 'Option 2' },
+        ],
+        rows: undefined,
+      },
+      textarea: {
+        label: 'Textbereich',
+        placeholder: 'Text eingeben...',
+        options: undefined,
+        rows: 3,
+      },
+    };
+
+    const defaults = fieldDefaults[newType];
+    const newName = (defaults.label || newType).toLowerCase().replace(/\s+/g, '_');
+
+    onUpdateField({
       type: newType,
-      options: newType === 'select' ? [
-        { value: '', label: 'Auswahl treffen' },
-        { value: 'option1', label: 'Option 1' },
-        { value: 'option2', label: 'Option 2' }
-      ] : undefined,
-      rows: newType === 'textarea' ? 3 : undefined
+      label: defaults.label,
+      name: `${newName}_${field.id.substring(0, 4)}`, // Keep a stable part of the old id for the name
+      placeholder: defaults.placeholder,
+      options: defaults.options,
+      rows: defaults.rows,
     });
   };
 
@@ -85,9 +136,13 @@ export function ModernFieldBuilder({
     } ${isEditing ? 'border-blue-500 shadow-lg' : ''}`}>
       
       {/* Drag Handle */}
-      <div className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+      <div
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+        {...(dragProps as any)}
+      >
+        <div className="absolute -inset-1 bg-blue-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </div>
 
@@ -198,10 +253,8 @@ export function ModernFieldBuilder({
               onChange={onChange}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             >
-              {field.options?.map((option, index) => (
-                <option key={index} value={option.value}>
-                  {option.label}
-                </option>
+              {(field.options || []).map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
           )}
@@ -210,21 +263,18 @@ export function ModernFieldBuilder({
             <textarea
               value={value}
               onChange={onChange}
-              placeholder={field.placeholder || 'Text eingeben...'}
               rows={field.rows || 3}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+              placeholder={field.placeholder || 'Text eingeben...'}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           )}
 
-          {error && (
-            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
 
-        {/* Field Settings */}
-        <div className="flex items-center justify-between">
+        {/* Field Footer / Actions */}
+        <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <div className="flex items-center space-x-4">
-            {/* Required Toggle */}
             <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -258,7 +308,10 @@ export function ModernFieldBuilder({
           {/* Actions */}
           <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              onClick={onDuplicate}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDuplicate();
+              }}
               className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
               title="Feld duplizieren"
             >
@@ -287,5 +340,95 @@ export function ModernFieldBuilder({
         />
       )}
     </div>
+  );
+}
+
+// THIS IS THE SECOND COMPONENT IN THE FILE
+
+interface SortableFieldProps {
+  field: FieldConfig;
+  children: React.ReactNode;
+}
+
+function SortableField({ field, children }: SortableFieldProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  };
+  
+  const childWithDragProps = React.cloneElement(
+    children as React.ReactElement<ModernFieldBuilderProps>,
+    {
+      isDragging,
+      dragProps: { ...attributes, ...listeners },
+    }
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {childWithDragProps}
+    </div>
+  );
+}
+
+interface ModernFormBuilderProps {
+  fields: FieldConfig[];
+  formData: Record<string, string>;
+  onFieldChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onUpdateField: (id: string, updates: Partial<FieldConfig>) => void;
+  onRemoveField: (id: string) => void;
+  onDuplicateField: (id: string) => void;
+  errors: Record<string, string | null>;
+}
+
+export function ModernFormBuilder({
+  fields,
+  formData,
+  onFieldChange,
+  onUpdateField,
+  onRemoveField,
+  onDuplicateField,
+  errors,
+}: ModernFormBuilderProps) {
+  const { addField, addTemplateFields } = useFormBuilderStore();
+
+  if (fields.length === 0) {
+    return (
+      <EmptyStep
+        onAddField={(type: FieldConfig['type']) => addField(type)}
+        onAddTemplate={(template: FieldTemplate) => addTemplateFields(template)}
+      />
+    );
+  }
+
+  return (
+    <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+      <div className="space-y-6">
+        {fields.map(field => (
+          <SortableField key={field.id} field={field}>
+            <ModernFieldBuilder
+              field={field}
+              value={formData[field.name] || ''}
+              onChange={onFieldChange}
+              onUpdateField={(updates) => onUpdateField(field.id, updates)}
+              onRemove={() => onRemoveField(field.id)}
+              onDuplicate={() => onDuplicateField(field.id)}
+              error={errors[field.name]}
+            />
+          </SortableField>
+        ))}
+      </div>
+    </SortableContext>
   );
 }

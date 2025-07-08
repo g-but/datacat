@@ -1,0 +1,16 @@
+{
+  "name": "kivi-hr",
+  "version": "1.0.0",
+  "description": "AI-Ready Intake System - HR Use Case",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd frontend && npm run start",
+    "lint": "cd frontend && npm run lint",
+    "install-frontend": "cd frontend && npm install",
+    "setup": "npm run install-frontend"
+  },
+  "keywords": ["hr", "intake", "ai", "nextjs", "react"],
+  "license": "MIT"
+} 

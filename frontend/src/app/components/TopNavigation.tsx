@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 
 interface TopNavigationProps {
   currentView?: 'builder' | 'templates' | 'saved-forms';
+  onViewChange?: (view: 'builder' | 'templates' | 'saved-forms') => void;
   onNewForm: () => void;
   onSaveForm: () => void;
   onPreviewForm: () => void;
@@ -14,6 +15,7 @@ interface TopNavigationProps {
 
 export function TopNavigation({
   currentView = 'builder',
+  onViewChange,
   onNewForm,
   onSaveForm,
   onPreviewForm,
@@ -40,8 +42,20 @@ export function TopNavigation({
     { id: 'saved-forms', label: 'Gespeicherte Formulare', icon: '💾' }
   ];
 
+  const handleNavigationClick = (viewId: string) => {
+    const view = viewId as 'builder' | 'templates' | 'saved-forms';
+    if (onViewChange) {
+      onViewChange(view);
+    } else {
+      // Fallback to page navigation if no callback provided
+      if (viewId === 'templates') window.location.href = '/templates';
+      else if (viewId === 'saved-forms') window.location.href = '/forms';
+      else if (viewId === 'builder') window.location.href = '/builder';
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-40">
       <div className="flex items-center justify-between">
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center space-x-8">
@@ -58,11 +72,7 @@ export function TopNavigation({
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => {
-                  if (item.id === 'templates') window.location.href = '/templates';
-                  else if (item.id === 'saved-forms') window.location.href = '/forms';
-                  else if (item.id === 'builder') window.location.href = '/builder';
-                }}
+                onClick={() => handleNavigationClick(item.id)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   currentView === item.id
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'

@@ -2,10 +2,13 @@
 
 import React from 'react';
 import { SavedForms } from '../components/SavedForms';
+import { FormPreviewModal } from '../components/FormPreviewModal';
 import { useRouter } from 'next/navigation';
 
 export default function SavedFormsPage() {
   const router = useRouter();
+
+  const [previewForm, setPreviewForm] = React.useState<any | null>(null);
 
   const handleLoadForm = (form: any) => {
     // Store form data in localStorage for the builder to pick up
@@ -26,13 +29,15 @@ export default function SavedFormsPage() {
   };
 
   const handleDeleteForm = (formId: string) => {
-    console.log('Delete form:', formId);
-    // TODO: Implement actual form deletion
+    const saved = JSON.parse(localStorage.getItem('savedForms') || '[]');
+    const updated = saved.filter((f: any) => f.id !== formId);
+    localStorage.setItem('savedForms', JSON.stringify(updated));
+    // Simple refresh to update list
+    window.location.reload();
   };
 
   const handlePreviewForm = (form: any) => {
-    console.log('Preview form:', form);
-    // TODO: Implement form preview modal
+    setPreviewForm(form);
   };
 
   return (
@@ -42,6 +47,11 @@ export default function SavedFormsPage() {
         onDuplicateForm={handleDuplicateForm}
         onDeleteForm={handleDeleteForm}
         onPreviewForm={handlePreviewForm}
+      />
+      <FormPreviewModal
+        isOpen={!!previewForm}
+        form={previewForm}
+        onClose={() => setPreviewForm(null)}
       />
     </div>
   );

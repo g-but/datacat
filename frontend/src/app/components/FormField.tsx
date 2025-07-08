@@ -6,33 +6,23 @@ interface BaseFieldProps {
   label: string;
   required?: boolean;
   className?: string;
-  error?: string;
+  error?: string | null;
   onBlur?: () => void;
-}
-
-interface TextFieldProps extends BaseFieldProps {
-  type: 'text' | 'email' | 'tel' | 'date';
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-}
-
-interface SelectFieldProps extends BaseFieldProps {
-  type: 'select';
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { value: string; label: string }[];
-}
-
-interface TextAreaFieldProps extends BaseFieldProps {
-  type: 'textarea';
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
   rows?: number;
+  options?: { value: string; label: string }[];
 }
 
-type FormFieldProps = TextFieldProps | SelectFieldProps | TextAreaFieldProps;
+type FormFieldProps = BaseFieldProps & {
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea';
+  value: string;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => void;
+  placeholder?: string;
+  rows?: number;
+  options?: { value: string; label: string }[];
+};
 
 const baseInputClasses = "w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-200 backdrop-blur-sm";
 const baseLabelClasses = "block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2";
@@ -69,7 +59,8 @@ export function FormField(props: FormFieldProps) {
           />
         );
       
-      case 'select':
+      case 'select': {
+        const options = props.options || [];
         return (
           <select
             id={id}
@@ -80,13 +71,14 @@ export function FormField(props: FormFieldProps) {
             required={required}
             className={`${getInputClasses(hasError)} ${className}`}
           >
-            {props.options.map((option) => (
+            {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
         );
+      }
       
       case 'textarea':
         return (

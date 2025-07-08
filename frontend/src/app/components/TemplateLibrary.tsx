@@ -1,24 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FieldConfig } from '../types/form';
+import { FieldConfig, FormTemplate } from '../types/form';
 
-interface FormTemplate {
-  id: string;
-  name: string;
-  description: string;
+// Local type that omits `id` for fields (template fields get fresh ids when used)
+type TemplateData = Omit<FormTemplate, 'fields'> & {
+  fields: Omit<FieldConfig, 'id'>[];
   category: string;
   icon: string;
-  fields: Omit<FieldConfig, 'id'>[];
-  tags: string[];
-  isPopular?: boolean;
-  createdAt: string;
   usageCount: number;
-}
+  tags: string[];
+  createdAt: string;
+  isPopular?: boolean;
+};
 
 interface TemplateLibraryProps {
-  onUseTemplate: (template: FormTemplate) => void;
-  onPreviewTemplate: (template: FormTemplate) => void;
+  onUseTemplate: (template: TemplateData) => void;
+  onPreviewTemplate: (template: TemplateData) => void;
 }
 
 export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLibraryProps) {
@@ -26,7 +24,7 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const templates: FormTemplate[] = [
+  const templates: TemplateData[] = [
     {
       id: 'employee-onboarding',
       name: 'Mitarbeiter-Onboarding',

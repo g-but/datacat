@@ -1,676 +1,310 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { ModernSidebar } from './ModernSidebar';
-import { ModernFieldBuilder } from './ModernFormBuilder';
+import React, { useState, useCallback, useEffect } from 'react';
+import { ModernSidebar } from '../components/ModernSidebar';
 import { MultiStepFormBuilder } from './MultiStepFormBuilder';
 import { SaveTemplateModal } from './SaveTemplateModal';
 import { TopNavigation } from './TopNavigation';
 import { TemplateLibrary } from './TemplateLibrary';
 import { SavedForms } from './SavedForms';
-import { FieldConfig, FormData, FormStep } from '../types/form';
+import { FieldConfig, FormData, FormStep, FormTemplate, FieldTemplate } from '../types/form';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { useTemplateManager } from '../hooks/useTemplateManager';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
+import { ModernFormBuilder } from './ModernFormBuilder';
+import { FormPreviewModal } from './FormPreviewModal';
+import { TemplatePreviewModal } from './TemplatePreviewModal';
 
 interface ModernFormBuilderLayoutProps {
-  initialFields: FieldConfig[];
+  initialState?: Partial<ReturnType<typeof useFormBuilderStore.getState>>;
   onSubmit: (data: FormData) => void;
-  onFieldsChange?: (fields: FieldConfig[]) => void;
 }
 
 export function ModernFormBuilderLayout({
-  initialFields,
+  initialState,
   onSubmit,
-  onFieldsChange
 }: ModernFormBuilderLayoutProps) {
-  const [fields, setFields] = useState<FieldConfig[]>(initialFields);
-  const [formData, setFormData] = useState<FormData>(() => {
-    const data: FormData = {};
-    initialFields.forEach(field => {
-      data[field.name] = '';
-    });
-    return data;
-  });
-  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
-  const [draggedField, setDraggedField] = useState<string | null>(null);
-  const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>(undefined);
+  // Centralized state from Zustand
+  const {
+    fields,
+    steps,
+    formData,
+    isMultiStep,
+    currentStep,
+    setInitialState,
+    setFormData,
+    addField,
+    updateField,
+    removeField,
+    duplicateField,
+    moveField,
+    addTemplateFields,
+    addStep,
+    updateStep,
+    removeStep,
+    reorderStep,
+    toggleMultiStep,
+    setCurrentStep,
+  } = useFormBuilderStore();
   
-  // Multi-step form state
-  const [isMultiStep, setIsMultiStep] = useState(false);
-  const [steps, setSteps] = useState<FormStep[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  // Navigation state
+  // Local UI state
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>(undefined);
   const [currentView, setCurrentView] = useState<'builder' | 'templates' | 'saved-forms'>('builder');
   const [formTitle, setFormTitle] = useState('Neues Formular');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedTemplatePreview, setSelectedTemplatePreview] = useState<any | null>(null);
 
-  const { validateForm, validateSingleField, getFieldError, hasErrors } = useFormValidation(fields);
-  const { savedData, saveNow, clearSavedData, getLastSaveTime, hasSavedData } = useAutoSave(formData, fields);
+  // Initialize store on mount or when initialState prop changes
+  useEffect(() => {
+    setInitialState({
+      fields: initialState?.fields || [],
+      steps: initialState?.steps || [],
+      isMultiStep: initialState?.isMultiStep || false,
+    });
+    if (initialState?.fields || initialState?.steps) {
+      setHasUnsavedChanges(true);
+    }
+  }, [initialState, setInitialState]);
+  
+  // Derived state for validation and auto-save
+  const allFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
+  const { getFieldError, hasErrors, errors } = useFormValidation(allFields);
+  const { saveNow, clearSavedData, getLastSaveTime, hasSavedData } = useAutoSave(
+    formData, 
+    allFields
+  );
   const { saveTemplate } = useTemplateManager();
 
-  // Auto-load saved data
-  React.useEffect(() => {
-    if (savedData && Object.keys(formData).every(key => !formData[key])) {
-      setFormData(savedData.formData);
-      if (savedData.fields.length !== fields.length) {
-        setFields(savedData.fields);
-        onFieldsChange?.(savedData.fields);
+  const getStepsWithErrors = useCallback((): Set<string> => {
+    const stepErrorSet = new Set<string>();
+    if (!hasErrors || !isMultiStep) return stepErrorSet;
+
+    for (const step of steps) {
+      for (const field of step.fields) {
+        if (errors[field.name]) {
+          stepErrorSet.add(step.id);
+          break;
+        }
       }
     }
-  }, [savedData]);
+    return stepErrorSet;
+  }, [errors, steps, hasErrors, isMultiStep]);
 
   // Track unsaved changes
-  React.useEffect(() => {
-    setHasUnsavedChanges(fields.length > 0 || steps.length > 0);
-  }, [fields, steps, formData]);
-
-  const createQuickField = useCallback((type: FieldConfig['type']) => {
-    const fieldNames = {
-      text: 'Textfeld',
-      email: 'E-Mail',
-      tel: 'Telefon',
-      date: 'Datum',
-      select: 'Auswahl',
-      textarea: 'Textbereich'
-    };
-
-    const fieldConfig: FieldConfig = {
-      id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      name: `${fieldNames[type]?.toLowerCase().replace(/[^a-z]/g, '_') || type}_${Date.now()}`,
-      label: fieldNames[type] || type,
-      required: false,
-      placeholder: type === 'select' ? undefined : `${fieldNames[type]} eingeben...`,
-      options: type === 'select' ? [
-        { value: '', label: 'Auswahl treffen' },
-        { value: 'option1', label: 'Option 1' },
-        { value: 'option2', label: 'Option 2' }
-      ] : undefined,
-      rows: type === 'textarea' ? 3 : undefined
-    };
-
-    const newFields = [...fields, fieldConfig];
-    setFields(newFields);
-    setFormData(prev => ({
-      ...prev,
-      [fieldConfig.name]: ''
-    }));
-    onFieldsChange?.(newFields);
-  }, [fields, onFieldsChange]);
-
-  const createQuickFieldAtPosition = useCallback((type: FieldConfig['type'], position: number) => {
-    const fieldNames = {
-      text: 'Textfeld',
-      email: 'E-Mail',
-      tel: 'Telefon',
-      date: 'Datum',
-      select: 'Auswahl',
-      textarea: 'Textbereich'
-    };
-
-    const fieldConfig: FieldConfig = {
-      id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      name: `${fieldNames[type]?.toLowerCase().replace(/[^a-z]/g, '_') || type}_${Date.now()}`,
-      label: fieldNames[type] || type,
-      required: false,
-      placeholder: type === 'select' ? undefined : `${fieldNames[type]} eingeben...`,
-      options: type === 'select' ? [
-        { value: '', label: 'Auswahl treffen' },
-        { value: 'option1', label: 'Option 1' },
-        { value: 'option2', label: 'Option 2' }
-      ] : undefined,
-      rows: type === 'textarea' ? 3 : undefined
-    };
-
-    const newFields = [...fields];
-    newFields.splice(position, 0, fieldConfig);
-    setFields(newFields);
-    setFormData(prev => ({
-      ...prev,
-      [fieldConfig.name]: ''
-    }));
-    onFieldsChange?.(newFields);
-  }, [fields, onFieldsChange]);
+  useEffect(() => {
+    setHasUnsavedChanges(allFields.length > 0);
+  }, [allFields]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(name, value);
   };
-
-  const handleFieldBlur = (fieldName: string) => {
-    const value = formData[fieldName] || '';
-    validateSingleField(fieldName, value);
-  };
-
-  const updateField = (fieldId: string, updates: Partial<FieldConfig>) => {
-    const newFields = fields.map(field => 
-      field.id === fieldId ? { ...field, ...updates } : field
-    );
-    setFields(newFields);
-    onFieldsChange?.(newFields);
-  };
-
-  const removeField = (fieldId: string) => {
-    const fieldToRemove = fields.find(field => field.id === fieldId);
-    const newFields = fields.filter(field => field.id !== fieldId);
-    setFields(newFields);
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+  
+    const flatFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
+  
+    const oldIndex = flatFields.findIndex((f) => f.id === active.id);
+    const newIndex = flatFields.findIndex((f) => f.id === over.id);
     
-    if (fieldToRemove) {
-      setFormData(prev => {
-        const newData = { ...prev };
-        delete newData[fieldToRemove.name];
-        return newData;
-      });
-    }
-    onFieldsChange?.(newFields);
-  };
-
-  const duplicateField = (fieldId: string) => {
-    const fieldToDuplicate = fields.find(field => field.id === fieldId);
-    if (fieldToDuplicate) {
-      const duplicatedField: FieldConfig = {
-        ...fieldToDuplicate,
-        id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: `${fieldToDuplicate.name}_copy_${Date.now()}`,
-        label: `${fieldToDuplicate.label} (Kopie)`
-      };
-
-      const fieldIndex = fields.findIndex(field => field.id === fieldId);
-      const newFields = [
-        ...fields.slice(0, fieldIndex + 1),
-        duplicatedField,
-        ...fields.slice(fieldIndex + 1)
-      ];
-      
-      setFields(newFields);
-      setFormData(prev => ({
-        ...prev,
-        [duplicatedField.name]: ''
-      }));
-      onFieldsChange?.(newFields);
-    }
-  };
-
-  const moveField = (fromIndex: number, toIndex: number) => {
-    const newFields = [...fields];
-    const [movedField] = newFields.splice(fromIndex, 1);
-    newFields.splice(toIndex, 0, movedField);
-    setFields(newFields);
-    onFieldsChange?.(newFields);
+    if (oldIndex === -1 || newIndex === -1) return;
+  
+    moveField(oldIndex, newIndex);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const errors = validateForm(formData);
-    
-    if (errors.length === 0) {
+    // Re-validate all fields on submit. The hook should handle this.
+    if (!hasErrors) {
       clearSavedData();
       onSubmit(formData);
     }
   };
 
   const handleSaveAsTemplate = async (name: string, description: string) => {
-    await saveTemplate(name, description, fields);
+    const templateData = isMultiStep ? { steps } : { fields };
+    await saveTemplate(name, description, templateData.fields, templateData.steps, isMultiStep);
+    setShowSaveTemplateModal(false);
   };
 
-  // Multi-step form handlers
-  const handleToggleMultiStep = () => {
-    setIsMultiStep(!isMultiStep);
-    if (!isMultiStep && steps.length === 0) {
-      // Create first step when enabling multi-step
-      const firstStep: FormStep = {
-        id: `step-${Date.now()}`,
-        title: 'Schritt 1',
-        description: 'Erster Schritt',
-        fields: [],
-        isOptional: false
-      };
-      setSteps([firstStep]);
-    }
-  };
-
-  const handleCreateStep = (stepData: Omit<FormStep, 'id'>) => {
-    const newStep: FormStep = {
-      ...stepData,
-      id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    };
-    setSteps([...steps, newStep]);
-  };
-
-  const handleCreateStepAtPosition = (stepData: Omit<FormStep, 'id'>, position: number) => {
-    const newStep: FormStep = {
-      ...stepData,
-      id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    };
-    const newSteps = [...steps];
-    newSteps.splice(position, 0, newStep);
-    setSteps(newSteps);
-  };
-
-  const handleUpdateStep = (stepId: string, updates: Partial<FormStep>) => {
-    setSteps(steps.map(step => 
-      step.id === stepId ? { ...step, ...updates } : step
-    ));
-  };
-
-  const handleDeleteStep = (stepId: string) => {
-    const newSteps = steps.filter(step => step.id !== stepId);
-    setSteps(newSteps);
-    
-    // Move fields from deleted step back to unassigned
-    const updatedFields = fields.map(field => 
-      field.step === stepId ? { ...field, step: undefined } : field
-    );
-    setFields(updatedFields);
-    onFieldsChange?.(updatedFields);
-    
-    // Adjust current step if necessary
-    if (currentStep >= newSteps.length && newSteps.length > 0) {
-      setCurrentStep(newSteps.length - 1);
-    }
-  };
-
-  const handleAssignFieldToStep = (fieldId: string, stepId: string) => {
-    const updatedFields = fields.map(field => 
-      field.id === fieldId ? { ...field, step: parseInt(stepId) } : field
-    );
-    setFields(updatedFields);
-    onFieldsChange?.(updatedFields);
-    
-    // Update step's fields array
-    const stepIndex = steps.findIndex(step => step.id === stepId);
-    if (stepIndex !== -1) {
-      const field = fields.find(f => f.id === fieldId);
-      if (field) {
-        const updatedSteps = [...steps];
-        updatedSteps[stepIndex] = {
-          ...updatedSteps[stepIndex],
-          fields: [...updatedSteps[stepIndex].fields, field]
-        };
-        setSteps(updatedSteps);
-      }
-    }
-  };
-
-  const handleReorderSteps = (fromIndex: number, toIndex: number) => {
-    const newSteps = [...steps];
-    const [movedStep] = newSteps.splice(fromIndex, 1);
-    newSteps.splice(toIndex, 0, movedStep);
-    setSteps(newSteps);
-  };
-
-  // Navigation handlers
   const handleNewForm = () => {
-    setFields([]);
-    setFormData({});
-    setSteps([]);
-    setIsMultiStep(false);
-    setCurrentStep(0);
+    setInitialState({ fields: [], steps: [], isMultiStep: false });
     setFormTitle('Neues Formular');
     setHasUnsavedChanges(false);
     setCurrentView('builder');
   };
 
-  const handlePreviewForm = () => {
-    // TODO: Implement form preview
-    console.log('Preview form:', { fields, steps, isMultiStep });
-  };
-
-  const handleUseTemplate = (template: any) => {
-    const newFields = template.fields.map((field: any) => ({
-      ...field,
-      id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    }));
-    
-    setFields(newFields);
-    setFormData(() => {
-      const data: FormData = {};
-      newFields.forEach((field: FieldConfig) => {
-        data[field.name] = '';
-      });
-      return data;
+  const handleUseTemplate = (template: FormTemplate) => {
+    setInitialState({
+      fields: template.fields || [],
+      steps: template.steps || [],
+      isMultiStep: template.isMultiStep || false,
     });
     setFormTitle(template.name);
-    setHasUnsavedChanges(true);
     setCurrentView('builder');
-    onFieldsChange?.(newFields);
   };
-
-  const handleLoadForm = (form: any) => {
-    setFields(form.fields);
-    setSteps(form.steps || []);
-    setIsMultiStep(form.isMultiStep || false);
-    setFormData(() => {
-      const data: FormData = {};
-      form.fields.forEach((field: FieldConfig) => {
-        data[field.name] = '';
-      });
-      return data;
-    });
-    setFormTitle(form.title);
-    setHasUnsavedChanges(false);
-    setCurrentView('builder');
-    onFieldsChange?.(form.fields);
-  };
-
-  const handleDuplicateForm = (form: any) => {
-    const duplicatedFields = form.fields.map((field: FieldConfig) => ({
-      ...field,
-      id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: `${field.name}_copy`
-    }));
-    
-    setFields(duplicatedFields);
-    setSteps(form.steps ? form.steps.map((step: FormStep) => ({
-      ...step,
-      id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    })) : []);
-    setIsMultiStep(form.isMultiStep || false);
-    setFormData(() => {
-      const data: FormData = {};
-      duplicatedFields.forEach((field: FieldConfig) => {
-        data[field.name] = '';
-      });
-      return data;
-    });
-    setFormTitle(`${form.title} (Kopie)`);
-    setHasUnsavedChanges(true);
-    setCurrentView('builder');
-    onFieldsChange?.(duplicatedFields);
-  };
-
-  const handleDeleteForm = (formId: string) => {
-    // TODO: Implement form deletion
-    console.log('Delete form:', formId);
-  };
-
-  const handlePreviewTemplate = (template: any) => {
-    // TODO: Implement template preview
-    console.log('Preview template:', template);
-  };
-
+  
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Top Navigation */}
-      <TopNavigation
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        onNewForm={handleNewForm}
-        onSaveForm={saveNow}
-        onPreviewForm={handlePreviewForm}
-        formTitle={formTitle}
-        onTitleChange={setFormTitle}
-        hasUnsavedChanges={hasUnsavedChanges}
-      />
-
-      {/* Main Content */}
-      {currentView === 'templates' ? (
-        <TemplateLibrary
-          onUseTemplate={handleUseTemplate}
-          onPreviewTemplate={handlePreviewTemplate}
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+        <TopNavigation
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onNewForm={handleNewForm}
+          onSaveForm={saveNow}
+          onPreviewForm={() => setShowPreviewModal(true)}
+          formTitle={formTitle}
+          onTitleChange={setFormTitle}
+          hasUnsavedChanges={hasUnsavedChanges}
         />
-      ) : currentView === 'saved-forms' ? (
-        <SavedForms
-          onLoadForm={handleLoadForm}
-          onDuplicateForm={handleDuplicateForm}
-          onDeleteForm={handleDeleteForm}
-          onPreviewForm={handlePreviewForm}
-        />
-      ) : (
-        <div className="flex flex-1 h-full">
-          {/* Sidebar */}
-          <ModernSidebar
-        onAddField={createQuickField}
-        onAddFieldAtPosition={createQuickFieldAtPosition}
-        onSaveTemplate={() => setShowSaveTemplateModal(true)}
-        onSaveDraft={saveNow}
-        canSubmit={!hasErrors}
-        fields={fields}
-        onFieldSelect={(fieldId) => setSelectedFieldId(fieldId)}
-        onFieldMove={(fieldId, direction) => {
-          const fieldIndex = fields.findIndex(f => f.id === fieldId);
-          if (fieldIndex === -1) return;
-          
-          const newIndex = direction === 'up' ? fieldIndex - 1 : fieldIndex + 1;
-          if (newIndex < 0 || newIndex >= fields.length) return;
-          
-          moveField(fieldIndex, newIndex);
-        }}
-        onFieldDuplicate={duplicateField}
-        onFieldDelete={removeField}
-        onFieldReorder={(fromIndex, toIndex) => moveField(fromIndex, toIndex)}
-        onAddFieldTemplate={(template) => {
-          const newFields = [...fields];
-          const newFormData = { ...formData };
-          
-          template.fields.forEach(fieldTemplate => {
-            const fieldConfig: FieldConfig = {
-              ...fieldTemplate,
-              id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              name: `${fieldTemplate.name}_${Date.now()}`
-            };
-            newFields.push(fieldConfig);
-            newFormData[fieldConfig.name] = '';
-          });
-          
-          setFields(newFields);
-          setFormData(newFormData);
-          onFieldsChange?.(newFields);
-        }}
-        selectedFieldId={selectedFieldId}
-        steps={steps}
-        isMultiStep={isMultiStep}
-        onToggleMultiStep={handleToggleMultiStep}
-        onCreateStep={handleCreateStep}
-        onCreateStepAtPosition={handleCreateStepAtPosition}
-        onUpdateStep={handleUpdateStep}
-        onDeleteStep={handleDeleteStep}
-        onAssignFieldToStep={handleAssignFieldToStep}
-        onReorderSteps={handleReorderSteps}
-        currentStep={currentStep}
-        onStepChange={setCurrentStep}
-      />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {isMultiStep ? 'Multi-Step Formular' : 'Formular-Editor'}
-              </h1>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {isMultiStep 
-                  ? `Schritt ${currentStep + 1} von ${steps.length}` 
-                  : `${fields.length} Felder`
-                }
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              {isMultiStep && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Multi-Step Modus aktiv
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Form Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {isMultiStep ? (
-            <MultiStepFormBuilder
+        {currentView === 'templates' ? (
+          <TemplateLibrary
+            onUseTemplate={handleUseTemplate}
+            onPreviewTemplate={setSelectedTemplatePreview}
+          />
+        ) : currentView === 'saved-forms' ? (
+          <SavedForms
+            onLoadForm={handleUseTemplate} // Re-using handleUseTemplate as it now just loads state
+            onDuplicateForm={() => { /* TODO */ }}
+            onDeleteForm={() => { /* TODO */ }}
+            onPreviewForm={setSelectedTemplatePreview}
+          />
+        ) : (
+          <div className="flex flex-1 h-full overflow-hidden">
+            <ModernSidebar
+              onAddField={(type) => addField(type, isMultiStep ? steps[currentStep]?.id : undefined)}
+              onSaveTemplate={() => setShowSaveTemplateModal(true)}
+              selectedFieldId={selectedFieldId}
+              onFieldSelect={setSelectedFieldId}
+              onFieldUpdate={(id, updates) => updateField(id, updates)}
+              onFieldDuplicate={(id) => duplicateField(id, isMultiStep ? steps.find(s => s.fields.some(f=>f.id===id))?.id : undefined)}
+              onFieldDelete={(id) => removeField(id, isMultiStep ? steps.find(s => s.fields.some(f=>f.id===id))?.id : undefined)}
+              onAddFieldTemplate={(template) => addTemplateFields(template, isMultiStep ? steps[currentStep]?.id : undefined)}
+              isMultiStep={isMultiStep}
+              onToggleMultiStep={toggleMultiStep}
               steps={steps}
               currentStep={currentStep}
               onStepChange={setCurrentStep}
-              formData={formData}
-              onFieldChange={(fieldName, value) => {
-                setFormData(prev => ({
-                  ...prev,
-                  [fieldName]: value
-                }));
-              }}
-              onSubmit={() => handleSubmit({} as React.FormEvent)}
-              canSubmit={!hasErrors}
+              onCreateStep={(data) => addStep(data)}
+              onUpdateStep={updateStep}
+              onDeleteStep={removeStep}
+              onReorderSteps={reorderStep}
             />
-          ) : (
-            <div className="max-w-4xl mx-auto">
-              {/* Auto-save Notification */}
-              {hasSavedData && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 animate-fade-in backdrop-blur-sm mb-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
-                        <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                        Automatisch gespeichert {getLastSaveTime()}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={clearSavedData}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 font-medium hover:underline transition-all duration-200"
-                    >
-                      Entwurf löschen
-                    </button>
+            
+            <main className="flex-1 flex flex-col">
+              <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {formTitle}
+                  </h1>
+                   <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {isMultiStep 
+                      ? `${steps.length} Schritte / ${allFields.length} Felder`
+                      : `${fields.length} Felder`
+                    }
                   </div>
                 </div>
-              )}
+              </header>
 
-              {/* Single-step form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {fields.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="text-6xl mb-4">📝</div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                      Erstellen Sie Ihr erstes Feld
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                      Beginnen Sie mit einem Feld oder wählen Sie eine Vorlage aus der Bibliothek.
-                    </p>
-                    
-                    {/* Direct Action Buttons */}
-                    <div className="flex flex-col items-center space-y-4">
-                      {/* Quick Field Buttons */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => createQuickField('text')}
-                          className="flex flex-col items-center px-4 py-3 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                        >
-                          <span className="text-2xl mb-1">📝</span>
-                          <span className="text-sm font-medium">Text-Feld</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createQuickField('email')}
-                          className="flex flex-col items-center px-4 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
-                        >
-                          <span className="text-2xl mb-1">📧</span>
-                          <span className="text-sm font-medium">E-Mail</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createQuickField('select')}
-                          className="flex flex-col items-center px-4 py-3 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
-                        >
-                          <span className="text-2xl mb-1">📋</span>
-                          <span className="text-sm font-medium">Auswahl</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => createQuickField('textarea')}
-                          className="flex flex-col items-center px-4 py-3 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
-                        >
-                          <span className="text-2xl mb-1">📄</span>
-                          <span className="text-sm font-medium">Textbereich</span>
-                        </button>
-                      </div>
-                      
-                      {/* Divider */}
-                      <div className="flex items-center w-full max-w-md">
-                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                        <span className="px-3 text-sm text-gray-500 dark:text-gray-400">oder</span>
-                        <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                      </div>
-                      
-                      {/* Template and Multi-Step Options */}
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setCurrentView('templates')}
-                          className="flex items-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          <span className="mr-2">📚</span>
-                          <span className="font-medium">Vorlagen durchsuchen</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleToggleMultiStep}
-                          className="flex items-center px-6 py-3 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
-                        >
-                          <span className="mr-2">🔄</span>
-                          <span className="font-medium">Multi-Step erstellen</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                {isMultiStep ? (
+                  <MultiStepFormBuilder
+                    steps={steps}
+                    currentStep={currentStep}
+                    onStepChange={setCurrentStep}
+                    formData={formData}
+                    onFieldChange={(name, value) => setFormData(name, value)}
+                    onUpdateStep={updateStep}
+                    onAddField={(type, stepId) => addField(type, stepId)}
+                    onAddTemplate={(template, stepId) => addTemplateFields(template, stepId)}
+                    stepsWithErrors={getStepsWithErrors()}
+                    errors={errors}
+                    onFieldUpdate={updateField}
+                    onFieldDuplicate={duplicateField}
+                    onFieldRemove={removeField}
+                  />
                 ) : (
-                  <div className="space-y-6">
-                    {fields.map((field) => (
-                      <ModernFieldBuilder
-                        key={field.id}
-                        field={field}
-                        value={formData[field.name] || ''}
-                        onChange={handleInputChange}
-                        onUpdateField={(updates) => updateField(field.id, updates)}
-                        onRemove={() => removeField(field.id)}
-                        onDuplicate={() => duplicateField(field.id)}
-                        error={getFieldError(field.name)}
-                        isDragging={draggedField === field.id}
-                      />
-                    ))}
-
-                    {/* Submit Button */}
-                    <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        type="submit"
-                        disabled={hasErrors}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
-                      >
-                        <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        Formular absenden
-                      </button>
-                    </div>
+                  <div className="max-w-4xl mx-auto">
+                    {allFields.length === 0 ? (
+                      <div className="text-center py-16">
+                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                           Formular-Editor
+                         </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                          Fügen Sie Felder hinzu, um Ihr Formular zu erstellen.
+                        </p>
+                         <div className="flex justify-center gap-4">
+                          <button
+                            type="button"
+                            onClick={() => addField('text')}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                          >
+                            Textfeld hinzufügen
+                          </button>
+                           <button
+                            type="button"
+                            onClick={toggleMultiStep}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+                          >
+                             Multi-Step erstellen
+                           </button>
+                         </div>
+                       </div>
+                    ) : (
+                      <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+                        <ModernFormBuilder
+                          fields={fields}
+                          formData={formData}
+                          onFieldChange={handleInputChange}
+                          onUpdateField={updateField}
+                          onRemoveField={removeField}
+                          onDuplicateField={duplicateField}
+                          errors={errors}
+                        />
+                      </SortableContext>
+                    )}
                   </div>
                 )}
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            </main>
+          </div>
+        )}
 
-          {/* Save Template Modal */}
-          <SaveTemplateModal
-            isOpen={showSaveTemplateModal}
-            onClose={() => setShowSaveTemplateModal(false)}
-            onSave={handleSaveAsTemplate}
-            fields={fields}
+        <SaveTemplateModal
+          isOpen={showSaveTemplateModal}
+          onClose={() => setShowSaveTemplateModal(false)}
+          onSave={handleSaveAsTemplate}
+          fields={fields}
+          steps={steps}
+          isMultiStep={isMultiStep}
+        />
+
+        <FormPreviewModal
+          isOpen={showPreviewModal}
+          onClose={() => setShowPreviewModal(false)}
+          fields={allFields}
+          steps={isMultiStep ? steps : undefined}
+          isMultiStep={isMultiStep}
+          title={formTitle}
+        />
+
+        {selectedTemplatePreview && (
+          <TemplatePreviewModal
+            isOpen={!!selectedTemplatePreview}
+            onClose={() => setSelectedTemplatePreview(null)}
+            template={selectedTemplatePreview}
+            onUseTemplate={handleUseTemplate}
           />
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DndContext>
   );
 }

@@ -2,10 +2,14 @@
 
 import React from 'react';
 import { TemplateLibrary } from '../components/TemplateLibrary';
+import { TemplatePreviewModal } from '../components/TemplatePreviewModal';
+import { FormTemplate } from '../types/form';
 import { useRouter } from 'next/navigation';
 
 export default function TemplatesPage() {
   const router = useRouter();
+
+  const [previewTemplate, setPreviewTemplate] = React.useState<FormTemplate | null>(null);
 
   const handleUseTemplate = (template: any) => {
     // Store template data in localStorage for the builder to pick up
@@ -15,8 +19,12 @@ export default function TemplatesPage() {
   };
 
   const handlePreviewTemplate = (template: any) => {
-    console.log('Preview template:', template);
-    // TODO: Implement template preview modal
+    // Convert template fields to include fake ids for preview to satisfy FormTemplate type
+    const withIds = {
+      ...template,
+      fields: template.fields.map((f: any, idx: number) => ({ id: `preview-${idx}`, ...f }))
+    } as FormTemplate;
+    setPreviewTemplate(withIds);
   };
 
   return (
@@ -24,6 +32,11 @@ export default function TemplatesPage() {
       <TemplateLibrary
         onUseTemplate={handleUseTemplate}
         onPreviewTemplate={handlePreviewTemplate}
+      />
+      <TemplatePreviewModal
+        isOpen={!!previewTemplate}
+        template={previewTemplate}
+        onClose={() => setPreviewTemplate(null)}
       />
     </div>
   );
