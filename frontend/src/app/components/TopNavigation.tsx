@@ -1,198 +1,196 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+// Define types for navigation items
+type NavItem = {
+  name: string;
+  href: string;
+  description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+};
+
+// Example Icon (you can create more specific icons)
+const DocumentChartBarIcon = (props: { className?: string }) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+const DocumentDuplicateIcon = (props: { className?: string }) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+);
+const FolderIcon = (props: { className?: string }) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+    </svg>
+);
+
 
 interface TopNavigationProps {
-  currentView?: 'builder' | 'templates' | 'saved-forms';
-  onViewChange?: (view: 'builder' | 'templates' | 'saved-forms') => void;
+  currentView: 'builder' | 'templates' | 'saved-forms' | 'about';
+  onViewChange: (view: 'builder' | 'templates' | 'saved-forms' | 'about') => void;
+  // Other props from the old component can be added here if needed
   onNewForm: () => void;
   onSaveForm: () => void;
   onPreviewForm: () => void;
-  formTitle?: string;
-  onTitleChange?: (title: string) => void;
-  hasUnsavedChanges?: boolean;
+  formTitle: string;
+  onTitleChange: (title: string) => void;
+  hasUnsavedChanges: boolean;
 }
 
+
 export function TopNavigation({
-  currentView = 'builder',
+  currentView,
   onViewChange,
   onNewForm,
   onSaveForm,
   onPreviewForm,
-  formTitle = 'Neues Formular',
+  formTitle,
   onTitleChange,
-  hasUnsavedChanges = false
+  hasUnsavedChanges,
 }: TopNavigationProps) {
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [tempTitle, setTempTitle] = useState(formTitle);
+  const [isMegaMenuOpen, setMegaMenuOpen] = useState(false);
 
-  const handleTitleSave = () => {
-    onTitleChange?.(tempTitle);
-    setIsEditingTitle(false);
-  };
-
-  const handleTitleCancel = () => {
-    setTempTitle(formTitle);
-    setIsEditingTitle(false);
-  };
-
-  const navItems = [
-    { id: 'builder', label: 'Formular Builder', icon: '🏗️' },
-    { id: 'templates', label: 'Vorlagen-Bibliothek', icon: '📚' },
-    { id: 'saved-forms', label: 'Gespeicherte Formulare', icon: '💾' }
+  const primaryLinks: NavItem[] = [
+    { name: 'Formular Builder', href: '/builder', description: 'Erstellen und bearbeiten Sie Ihre Formulare.', icon: DocumentChartBarIcon },
+    { name: 'Vorlagen-Bibliothek', href: '/templates', description: 'Starten Sie mit einer vorgefertigten Vorlage.', icon: DocumentDuplicateIcon },
+    { name: 'Gespeicherte Formulare', href: '/forms', description: 'Verwalten Sie Ihre gespeicherten Formulare.', icon: FolderIcon },
   ];
-
-  const handleNavigationClick = (viewId: string) => {
-    const view = viewId as 'builder' | 'templates' | 'saved-forms';
-    if (onViewChange) {
-      onViewChange(view);
-    } else {
-      // Fallback to page navigation if no callback provided
-      if (viewId === 'templates') window.location.href = '/templates';
-      else if (viewId === 'saved-forms') window.location.href = '/forms';
-      else if (viewId === 'builder') window.location.href = '/builder';
-    }
+  
+  const handleViewChange = (view: 'builder' | 'templates' | 'saved-forms') => {
+    onViewChange(view);
+    setMegaMenuOpen(false);
   };
-
+  
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sticky top-0 z-40">
-      <div className="flex items-center justify-between">
-        {/* Left side - Logo and Navigation */}
-        <div className="flex items-center space-x-8">
-          {/* Logo/Brand */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">FB</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
+    <header className="relative bg-white dark:bg-gray-800 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center py-4 md:justify-start md:space-x-10">
+          
+          {/* Logo */}
+          <div className="flex justify-start lg:w-0 lg:flex-1">
+            <Link href="/builder" passHref>
+              <a onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
+                <Image src="/logo.svg" alt="Form Builder" width={40} height={40} />
+                <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
+              </a>
+            </Link>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex space-x-1">
-            {navItems.map((item) => (
+          {/* Mobile menu button */}
+          <div className="-mr-2 -my-2 md:hidden">
+            <button
+              onClick={() => setMegaMenuOpen(!isMegaMenuOpen)}
+              className="bg-white dark:bg-gray-800 rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+            >
+              <span className="sr-only">Menü öffnen</span>
+              <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Desktop Menu */}
+          <nav className="hidden md:flex space-x-10">
+            <div className="relative">
               <button
-                key={item.id}
-                onClick={() => handleNavigationClick(item.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  currentView === item.id
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                onClick={() => setMegaMenuOpen(!isMegaMenuOpen)}
+                className="text-gray-500 group bg-white dark:bg-gray-800 rounded-md inline-flex items-center text-base font-medium hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-sm">{item.label}</span>
+                <span>Lösungen</span>
+                <svg className="ml-2 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </button>
-            ))}
+
+              {/* Mega Menu */}
+              {isMegaMenuOpen && (
+                <div 
+                    className="absolute z-10 -ml-4 mt-3 transform px-2 w-screen max-w-md sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2"
+                    onMouseLeave={() => setMegaMenuOpen(false)}
+                >
+                  <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+                    <div className="relative grid gap-6 bg-white dark:bg-gray-700 px-5 py-6 sm:gap-8 sm:p-8">
+                      {primaryLinks.map((item) => (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleViewChange(item.href.replace('/', '') as any);
+                          }}
+                          className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                        >
+                          {item.icon && <item.icon className="flex-shrink-0 h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                          <div className="ml-4">
+                            <p className="text-base font-medium text-gray-900 dark:text-white">{item.name}</p>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                    <div className="px-5 py-5 bg-gray-50 dark:bg-gray-800 space-y-6 sm:flex sm:space-y-0 sm:space-x-10 sm:px-8">
+                       <div className="flow-root">
+                         <Link href="/about" passHref>
+                           <a
+                             onClick={() => {
+                               onViewChange('about');
+                               setMegaMenuOpen(false);
+                             }}
+                             className="-m-3 p-3 flex items-center rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                           >
+                            <svg className="flex-shrink-0 h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                             <span className="ml-3">Über uns</span>
+                           </a>
+                         </Link>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link href="/about" passHref>
+              <a onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
+                Über uns
+              </a>
+            </Link>
           </nav>
-        </div>
-
-        {/* Center - Form Title (only in builder view) */}
-        {currentView === 'builder' && (
-          <div className="flex items-center space-x-2">
-            {isEditingTitle ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={tempTitle}
-                  onChange={(e) => setTempTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleTitleSave();
-                    if (e.key === 'Escape') handleTitleCancel();
-                  }}
-                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autoFocus
-                />
-                <button
-                  onClick={handleTitleSave}
-                  className="p-1 text-green-600 hover:text-green-700"
-                  title="Speichern"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleTitleCancel}
-                  className="p-1 text-gray-400 hover:text-gray-600"
-                  title="Abbrechen"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsEditingTitle(true)}
-                className="flex items-center space-x-2 px-3 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
-              >
-                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{formTitle}</h1>
-                {hasUnsavedChanges && (
-                  <div className="w-2 h-2 bg-orange-500 rounded-full" title="Ungespeicherte Änderungen" />
-                )}
-                <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Right side - Quick Actions */}
-        <div className="flex items-center space-x-3">
+          
+           {/* Actions (only for builder view) */}
           {currentView === 'builder' && (
-            <>
-              {/* Quick Save */}
-              <button
-                onClick={onSaveForm}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  hasUnsavedChanges
-                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-900/50'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-                title="Formular speichern"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span className="text-sm">Speichern</span>
-              </button>
-
-              {/* Preview */}
-              <button
-                onClick={onPreviewForm}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
-                title="Formular-Vorschau"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="text-sm">Vorschau</span>
-              </button>
-            </>
+             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
+                <input 
+                  type="text"
+                  value={formTitle}
+                  onChange={(e) => onTitleChange(e.target.value)}
+                  className="w-48 mr-4 p-2 border rounded-md bg-white dark:bg-gray-700 text-sm"
+                />
+                 <button onClick={onPreviewForm} className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
+                     Vorschau
+                 </button>
+                 <button
+                     onClick={onSaveForm}
+                     className="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                 >
+                     Speichern {hasUnsavedChanges && <span className="ml-2 w-2 h-2 bg-green-400 rounded-full"></span>}
+                 </button>
+                 <button
+                     onClick={onNewForm}
+                     className="ml-2 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
+                 >
+                     + Neu
+                 </button>
+             </div>
           )}
-
-          {/* New Form */}
-          <button
-            onClick={onNewForm}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-            title="Neues Formular erstellen"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="text-sm">Neu</span>
-          </button>
-
-          {/* User Menu */}
-          <div className="flex items-center space-x-2 pl-3 border-l border-gray-200 dark:border-gray-700">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">U</span>
-            </div>
-          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

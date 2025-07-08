@@ -11,6 +11,15 @@
     "install-frontend": "cd frontend && npm install",
     "setup": "npm run install-frontend"
   },
-  "keywords": ["hr", "intake", "ai", "nextjs", "react"],
-  "license": "MIT"
-} 
+  "keywords": [
+    "hr",
+    "intake",
+    "ai",
+    "nextjs",
+    "react"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0"
+  }
+}
