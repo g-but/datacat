@@ -28,9 +28,20 @@ interface SavedFormsProps {
 
 export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPreviewForm }: SavedFormsProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({ status: 'all' });
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({ status: 'all', tags: [] });
   const [sortBy, setSortBy] = useState<'updatedAt' | 'createdAt' | 'title' | 'submissionCount'>('updatedAt');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  const defaultFilters = { status: 'all', tags: [] };
+  const defaultSortBy = 'updatedAt';
+
+  const isFiltered = searchTerm !== '' || sortBy !== defaultSortBy || JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedFilters(defaultFilters);
+    setSortBy(defaultSortBy);
+  };
 
   // Mock data - in real app this would come from API
   const savedForms: SavedForm[] = [
@@ -120,6 +131,9 @@ export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPrevie
     }
   ];
 
+  const allTags = [...new Set(savedForms.flatMap(f => f.tags))];
+  const tagOptions: FilterOption[] = allTags.map(tag => ({ value: tag, label: tag }));
+
   const statusOptions: FilterOption[] = [
     { value: 'all', label: 'Alle Status' },
     { value: 'published', label: 'Veröffentlicht' },
@@ -135,10 +149,11 @@ export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPrevie
   ];
 
   const filters: Filter[] = [
-    { id: 'status', label: 'Status', options: statusOptions }
+    { id: 'status', label: 'Status', options: statusOptions },
+    { id: 'tags', label: 'Tags', type: 'pills', options: tagOptions }
   ];
 
-  const handleFilterChange = (filterId: string, value: string) => {
+  const handleFilterChange = (filterId: string, value: string | string[]) => {
     setSelectedFilters(prev => ({ ...prev, [filterId]: value }));
   };
 
@@ -153,7 +168,10 @@ export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPrevie
     
     const matchesStatus = selectedFilters.status === 'all' || form.status === selectedFilters.status;
     
-    return matchesSearch && matchesStatus;
+    const selectedTags = selectedFilters.tags as string[];
+    const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => form.tags.includes(tag));
+
+    return matchesSearch && matchesStatus && matchesTags;
   });
 
   const sortedForms = [...filteredForms].sort((a, b) => {
@@ -272,6 +290,8 @@ export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPrevie
           sortByOptions={sortOptions}
           currentSortBy={sortBy}
           onSortByChange={handleSortByChange}
+          isFiltered={isFiltered}
+          onClearAll={clearFilters}
         >
             <div className="flex items-center gap-2">
                 <button 
@@ -400,9 +420,15 @@ export function SavedForms({ onLoadForm, onDuplicateForm, onDeleteForm, onPrevie
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📂</div>
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Keine Formulare gefunden</h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Ihre Suche ergab keine Treffer. Versuchen Sie es mit anderen Filtern.
             </p>
+             <button
+                onClick={clearFilters}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+                Filter zurücksetzen
+            </button>
           </div>
         )}
       </div>

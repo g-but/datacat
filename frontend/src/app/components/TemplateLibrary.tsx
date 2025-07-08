@@ -22,9 +22,20 @@ interface TemplateLibraryProps {
 
 export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({ category: 'all' });
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string | string[]>>({ category: 'all', tags: [] });
   const [sortBy, setSortBy] = useState('popular');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const defaultFilters = { category: 'all', tags: [] };
+  const defaultSortBy = 'popular';
+
+  const isFiltered = searchTerm !== '' || sortBy !== defaultSortBy || JSON.stringify(selectedFilters) !== JSON.stringify(defaultFilters);
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedFilters(defaultFilters);
+    setSortBy(defaultSortBy);
+  };
 
   const templates: TemplateData[] = [
     {
@@ -180,6 +191,9 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
     }
   ];
 
+  const allTags = [...new Set(templates.flatMap(t => t.tags))];
+  const tagOptions: FilterOption[] = allTags.map(tag => ({ value: tag, label: tag }));
+
   const categories = [
     { value: 'all', label: 'Alle Kategorien' },
     { value: 'hr', label: 'Personal & HR' },
@@ -201,10 +215,16 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
       id: 'category',
       label: 'Kategorie',
       options: categories,
+    },
+    {
+      id: 'tags',
+      label: 'Tags',
+      type: 'pills',
+      options: tagOptions,
     }
   ];
   
-  const handleFilterChange = (filterId: string, value: string) => {
+  const handleFilterChange = (filterId: string, value: string | string[]) => {
     setSelectedFilters(prev => ({...prev, [filterId]: value}));
   };
 
@@ -215,7 +235,10 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
     
     const matchesCategory = selectedFilters.category === 'all' || template.category === selectedFilters.category;
     
-    return matchesSearch && matchesCategory;
+    const selectedTags = selectedFilters.tags as string[];
+    const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => template.tags.includes(tag));
+
+    return matchesSearch && matchesCategory && matchesTags;
   });
 
   const sortedTemplates = [...filteredTemplates].sort((a, b) => {
@@ -352,6 +375,8 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
           sortByOptions={sortOptions}
           currentSortBy={sortBy}
           onSortByChange={setSortBy}
+          isFiltered={isFiltered}
+          onClearAll={clearFilters}
         >
             <div className="hidden lg:flex items-center gap-2">
                 <button 
@@ -428,10 +453,7 @@ export function TemplateLibrary({ onUseTemplate, onPreviewTemplate }: TemplateLi
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Keine Vorlagen gefunden</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">Keine Vorlagen gefunden. Versuchen Sie es mit anderen Suchbegriffen.</p>
                 <button
-                    onClick={() => {
-                        setSearchTerm('');
-                        setSelectedFilters({ category: 'all' });
-                    }}
+                    onClick={clearFilters}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
                 >
                     Filter zurücksetzen
