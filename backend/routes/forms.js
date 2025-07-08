@@ -18,4 +18,9 @@ router.get('/', auth, formController.getForms);
 // @access  Private
 router.delete('/:id', auth, formController.deleteForm);
 
+// @route   PUT api/forms/:id
+// @desc    Update a form
+// @access  Private
+router.put('/:id', auth, formController.updateForm);
+
 module.exports = router; 

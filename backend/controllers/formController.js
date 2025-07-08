@@ -57,4 +57,35 @@ exports.deleteForm = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server Error');
   }
+};
+
+exports.updateForm = async (req, res) => {
+  const { id } = req.params;
+  const { title, description, structure, status } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const form = await db.query('SELECT * FROM forms WHERE id = $1', [id]);
+
+    if (form.rows.length === 0) {
+      return res.status(404).json({ msg: 'Form not found' });
+    }
+
+    if (form.rows[0].user_id.toString() !== userId) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    const updatedForm = await db.query(
+      `UPDATE forms
+       SET title = $1, description = $2, structure = $3, status = $4, updated_at = NOW()
+       WHERE id = $5 AND user_id = $6
+       RETURNING *`,
+      [title, description, structure, status, id, userId]
+    );
+
+    res.json(updatedForm.rows[0]);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 }; 
