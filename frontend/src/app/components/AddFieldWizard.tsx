@@ -240,7 +240,7 @@ export function AddFieldWizard({
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">Vorschau:</h4>
                 <div className="pointer-events-none">
                   <FormField
-                    type={fieldType as any}
+                    type={fieldType as 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea'}
                     id="preview"
                     name="preview"
                     label={fieldData.label || 'Feldbezeichnung'}

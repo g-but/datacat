@@ -31,30 +31,9 @@ interface FormBuilderState {
 
   toggleMultiStep: () => void;
   setCurrentStep: (index: number) => void;
+
+  loadTemplate: (template: { fields?: FieldConfig[], steps?: FormStep[], isMultiStep?: boolean }) => void;
 }
-
-const createField = (type: FieldConfig['type'], stepId?: string): FieldConfig => {
-  const fieldDefaults: Record<FieldConfig['type'], Partial<FieldConfig>> = {
-    text: { label: 'Textfeld', placeholder: 'Text eingeben...' },
-    email: { label: 'E-Mail', placeholder: 'E-Mail eingeben...' },
-    tel: { label: 'Telefon', placeholder: 'Telefonnummer eingeben...' },
-    date: { label: 'Datum', placeholder: '' },
-    select: { label: 'Auswahl', options: [{ value: 'option1', label: 'Option 1' }] },
-    textarea: { label: 'Textbereich', placeholder: 'Text eingeben...', rows: 3 },
-  };
-  const defaults = fieldDefaults[type];
-  const id = `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  const name = `${(defaults.label || type).toLowerCase().replace(/\s+/g, '_')}_${id.substring(0, 4)}`;
-
-  return {
-    id,
-    type,
-    name,
-    label: defaults.label || 'Neues Feld',
-    ...defaults,
-    step: stepId,
-  };
-};
 
 export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
   fields: [],
@@ -75,7 +54,14 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
   })),
 
   addField: (type, stepId) => {
-    const newField = createField(type, stepId);
+    const newField = {
+      id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      name: `${(type).toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
+      label: type,
+      placeholder: '',
+      step: stepId,
+    };
     set(state => {
       const newFormData = { ...state.formData, [newField.name]: '' };
       if (state.isMultiStep) {
@@ -254,24 +240,47 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
     steps: state.steps.map((s) => (s.id === stepId ? { ...s, ...updates } : s)),
   })),
 
-  removeStep: (stepId) => set((state) => ({
-    steps: state.steps.filter((s) => s.id !== stepId),
-  })),
-
-  reorderStep: (from, to) => set((state) => ({
-    steps: arrayMove(state.steps, from, to),
-  })),
-
-  toggleMultiStep: () => set((state) => {
-    if (!state.isMultiStep && state.steps.length === 0) {
-      // First time enabling, create initial step
-      return { 
-        isMultiStep: true,
-        steps: [{ id: `step-${Date.now()}`, title: 'Schritt 1', description: '', fields: [], isOptional: false }]
-      };
+  removeStep: (stepId) => set((state) => {
+    const newSteps = state.steps.filter((s) => s.id !== stepId);
+    // Ensure currentStep index stays within bounds after deletion
+    let newCurrentStep = state.currentStep;
+    if (newCurrentStep >= newSteps.length) {
+      newCurrentStep = Math.max(newSteps.length - 1, 0);
     }
-    return { isMultiStep: !state.isMultiStep };
+    return {
+      steps: newSteps,
+      currentStep: newCurrentStep,
+    };
   }),
 
-  setCurrentStep: (idx) => set(() => ({ currentStep: idx })),
+  reorderStep: (from, to) => set(state => ({
+    steps: arrayMove(state.steps, from, to)
+  })),
+
+  toggleMultiStep: () => set(state => ({
+    isMultiStep: !state.isMultiStep,
+    fields: state.isMultiStep ? state.steps.flatMap(s => s.fields) : [],
+    steps: !state.isMultiStep && state.fields.length > 0
+      ? [{ id: `step-${Date.now()}`, title: 'Schritt 1', fields: state.fields }]
+      : state.steps,
+  })),
+
+  setCurrentStep: (index) => set({ currentStep: index }),
+
+  // Load a full form template and replace current builder state
+  loadTemplate: (template) => set(() => {
+    const isMulti = !!(template.steps && template.steps.length) || template.isMultiStep;
+    const fields = isMulti ? [] : (template.fields || []);
+    const steps = isMulti ? (template.steps || []) : [];
+    const allFields = isMulti ? steps.flatMap(s => s.fields) : fields;
+    const formData = allFields.reduce((acc, f) => ({ ...acc, [f.name]: '' }), {} as Record<string,string>);
+
+    return {
+      fields,
+      steps,
+      isMultiStep: isMulti,
+      formData,
+      currentStep: 0,
+    };
+  }),
 })); 

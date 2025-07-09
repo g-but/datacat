@@ -121,7 +121,9 @@ export function DynamicForm({ initialFields, onSubmit, onFieldsChange }: Dynamic
       tel: 'Telefon',
       date: 'Datum',
       select: 'Auswahl',
-      textarea: 'Textbereich'
+      textarea: 'Textbereich',
+      checkbox: 'Checkbox',
+      radio: 'Radio'
     };
 
     const fieldConfig: FieldConfig = {
@@ -343,11 +345,7 @@ export function DynamicForm({ initialFields, onSubmit, onFieldsChange }: Dynamic
         {editingField && (
           <FieldEditor
             field={editingField}
-            isOpen={!!editingField}
-            onClose={() => setEditingField(null)}
-            onSave={handleSaveFieldEdit}
-            onDelete={() => handleDeleteField(editingField.id)}
-            availableGroups={getAvailableGroups()}
+            onUpdate={handleSaveFieldEdit}
           />
         )}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TemplateLibrary } from '../components/TemplateLibrary';
+import { TemplateLibrary, TemplateData } from '../components/TemplateLibrary';
 import { TemplatePreviewModal } from '../components/TemplatePreviewModal';
 import { FormTemplate } from '../types/form';
 import { useRouter } from 'next/navigation';
@@ -11,19 +11,19 @@ export default function TemplatesPage() {
 
   const [previewTemplate, setPreviewTemplate] = React.useState<FormTemplate | null>(null);
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: TemplateData) => {
     // Store template data in localStorage for the builder to pick up
     localStorage.setItem('selectedTemplate', JSON.stringify(template));
     // Navigate to builder
     router.push('/builder?from=template');
   };
 
-  const handlePreviewTemplate = (template: any) => {
+  const handlePreviewTemplate = (template: TemplateData) => {
     // Convert template fields to include fake ids for preview to satisfy FormTemplate type
-    const withIds = {
+    const withIds: FormTemplate = {
       ...template,
-      fields: template.fields.map((f: any, idx: number) => ({ id: `preview-${idx}`, ...f }))
-    } as FormTemplate;
+      fields: template.fields.map((f, idx) => ({ ...f, id: `preview-${idx}` }))
+    };
     setPreviewTemplate(withIds);
   };
 

@@ -35,6 +35,7 @@ exports.createSubmission = async (req, res) => {
 
 exports.getFormSubmissions = async (req, res) => {
   const { form_id } = req.params;
+  const { search, startDate, endDate } = req.query; // Get filter query params
   const userId = req.user.id;
 
   try {
@@ -47,11 +48,31 @@ exports.getFormSubmissions = async (req, res) => {
       return res.status(401).json({ msg: 'User not authorized to view these submissions' });
     }
 
-    // Fetch submissions for the form
-    const submissions = await db.query(
-      'SELECT id, data, submitted_at FROM submissions WHERE form_id = $1 ORDER BY submitted_at DESC', 
-      [form_id]
-    );
+    let query = 'SELECT id, data, submitted_at FROM submissions WHERE form_id = $1';
+    const params = [form_id];
+    let paramIndex = 2;
+
+    if (search) {
+      // This is a simple text search across the JSONB data column.
+      // It's not the most performant for very large datasets, but great for a start.
+      // For performance, a dedicated search index (like GIN) on the `data` column would be needed.
+      query += ` AND data::text ILIKE $${paramIndex++}`;
+      params.push(`%${search}%`);
+    }
+
+    if (startDate) {
+      query += ` AND submitted_at >= $${paramIndex++}`;
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      query += ` AND submitted_at <= $${paramIndex++}`;
+      params.push(endDate);
+    }
+
+    query += ' ORDER BY submitted_at DESC';
+
+    const submissions = await db.query(query, params);
 
     res.json(submissions.rows);
   } catch (err) {

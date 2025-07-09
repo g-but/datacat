@@ -25,7 +25,6 @@ const PublicFormPage = () => {
   const [submitted, setSubmitted] = useState(false);
 
   const params = useParams();
-  const router = useRouter();
   const { id } = params;
 
   useEffect(() => {
@@ -42,8 +41,8 @@ const PublicFormPage = () => {
           const data = await res.json();
           setForm(data);
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
@@ -73,8 +72,8 @@ const PublicFormPage = () => {
         throw new Error('Failed to submit the form. Please try again.');
       }
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setSubmitting(false);
     }

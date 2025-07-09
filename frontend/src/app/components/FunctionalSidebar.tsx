@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from './Button';
 import { FieldConfig } from '../types/form';
+
+interface FormSettings {
+  title: string;
+  description: string;
+  successMessage: string;
+  allowMultipleSubmissions: boolean;
+  requireAuthentication: boolean;
+}
 
 interface FunctionalSidebarProps {
   mode: 'build' | 'preview' | 'settings';
@@ -12,14 +19,8 @@ interface FunctionalSidebarProps {
   onFieldDuplicate: (fieldId: string) => void;
   onFieldDelete: (fieldId: string) => void;
   selectedFieldId?: string;
-  formSettings: {
-    title: string;
-    description: string;
-    successMessage: string;
-    allowMultipleSubmissions: boolean;
-    requireAuthentication: boolean;
-  };
-  onSettingsChange: (settings: any) => void;
+  formSettings: FormSettings;
+  onSettingsChange: (settings: FormSettings) => void;
 }
 
 interface FieldTypeOption {

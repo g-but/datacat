@@ -44,8 +44,8 @@ const SubmissionsPage = () => {
                 }
                 const data = await res.json();
                 setSubmissions(data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An error occurred');
             } finally {
                 setLoading(false);
             }
@@ -151,7 +151,7 @@ const SubmissionsPage = () => {
                                         </td>
                                         {Object.keys(submission.data).map(key => (
                                             <td key={key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                                {typeof submission.data[key] === 'boolean' ? (submission.data[key] ? 'Yes' : 'No') : submission.data[key].toString()}
+                                                {String(submission.data[key])}
                                             </td>
                                         ))}
                                     </tr>

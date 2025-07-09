@@ -7,7 +7,7 @@ import { SaveTemplateModal } from './SaveTemplateModal';
 import { TopNavigation } from './TopNavigation';
 import { TemplateLibrary, TemplateData } from './TemplateLibrary';
 import { SavedForms, SavedForm } from './SavedForms';
-import { FieldConfig, FormData, FormStep, FormTemplate } from '../types/form';
+import { FieldConfig, FormData, FormTemplate } from '../types/form';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { useAutoSave } from '../hooks/useAutoSave';
 // The useTemplateManager is no longer needed as we save to the backend.
@@ -23,18 +23,19 @@ import { useAuth } from '../context/AuthContext'; // Import useAuth
 interface ModernFormBuilderLayoutProps {
   initialState?: Partial<ReturnType<typeof useFormBuilderStore.getState>>;
   onSubmit: (data: FormData) => void;
+  onFieldsChange: (fields: FieldConfig[]) => void;
 }
 
 export function ModernFormBuilderLayout({
   initialState,
   onSubmit,
+  onFieldsChange,
 }: ModernFormBuilderLayoutProps) {
   const {
     fields,
     steps,
     formData,
     isMultiStep,
-    currentStep,
     setInitialState,
     setFormData,
     moveField,
@@ -147,14 +148,6 @@ export function ModernFormBuilderLayout({
       if (oldIndex !== -1 && newIndex !== -1) {
         moveField(oldIndex, newIndex);
       }
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!hasErrors) {
-      clearSavedData();
-      onSubmit(formData);
     }
   };
 

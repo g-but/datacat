@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FieldConfig } from '../types/form';
+import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
 
 interface FieldEditorProps {
   field: FieldConfig;
@@ -13,6 +14,9 @@ export function FieldEditor({ field, onUpdate }: FieldEditorProps) {
   const [placeholder, setPlaceholder] = useState(field.placeholder || '');
   const [options, setOptions] = useState(field.options || []);
   const [rows, setRows] = useState(field.rows || 3);
+
+  const { fields, steps, isMultiStep } = useFormBuilderStore();
+  const allOtherFields = (isMultiStep ? steps.flatMap(s => s.fields) : fields).filter(f => f.id !== field.id);
 
   // Reset state when the selected field changes
   useEffect(() => {
@@ -80,6 +84,26 @@ export function FieldEditor({ field, onUpdate }: FieldEditorProps) {
     handleUpdate({ rows: newRows });
   };
 
+  const handleLogicChange = (
+    key: keyof NonNullable<FieldConfig['conditionalLogic']>,
+    value: string
+  ) => {
+    const newLogic = {
+      ...(field.conditionalLogic || { fieldId: '', condition: 'isEqualTo', value: '' }),
+      [key]: value,
+    };
+
+    if (key === 'condition') {
+      newLogic.condition = value as NonNullable<FieldConfig['conditionalLogic']>['condition'];
+    }
+
+    onUpdate({ conditionalLogic: newLogic });
+  };
+  
+  const clearLogic = () => {
+    onUpdate({ conditionalLogic: undefined });
+  };
+  
   return (
     <div className="bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 space-y-6">
       <div>
@@ -169,6 +193,72 @@ export function FieldEditor({ field, onUpdate }: FieldEditorProps) {
             </select>
         </div>
       )}
+
+      {/* Conditional Logic Section */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Conditional Logic</h3>
+        
+        {!field.conditionalLogic ? (
+          <button 
+            onClick={() => handleLogicChange('fieldId', allOtherFields[0]?.id || '')}
+            className="w-full text-center px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Add Condition
+          </button>
+        ) : (
+          <div className="space-y-3 p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Show this field only if...
+            </p>
+            
+            <div>
+              <label htmlFor="logic-field" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Field</label>
+              <select
+                id="logic-field"
+                value={field.conditionalLogic.fieldId}
+                onChange={(e) => handleLogicChange('fieldId', e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="">Select a field...</option>
+                {allOtherFields.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="logic-condition" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Condition</label>
+              <select
+                id="logic-condition"
+                value={field.conditionalLogic.condition}
+                onChange={(e) => handleLogicChange('condition', e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-white dark:bg-gray-800"
+              >
+                <option value="isEqualTo">Is equal to</option>
+                <option value="isNotEqualTo">Is not equal to</option>
+                <option value="contains">Contains</option>
+                <option value="doesNotContain">Does not contain</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="logic-value" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Value</label>
+              <input
+                type="text"
+                id="logic-value"
+                value={field.conditionalLogic.value}
+                onChange={(e) => handleLogicChange('value', e.target.value)}
+                className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800"
+              />
+            </div>
+            
+            <button 
+              onClick={clearLogic}
+              className="w-full text-center px-4 py-2 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+            >
+              Remove Condition
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

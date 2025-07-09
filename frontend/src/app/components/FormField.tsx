@@ -14,7 +14,7 @@ interface BaseFieldProps {
 }
 
 type FormFieldProps = BaseFieldProps & {
-  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea';
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio';
   value: string;
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -94,6 +94,51 @@ export function FormField(props: FormFieldProps) {
             className={`${getInputClasses(hasError)} ${className}`}
           />
         );
+      
+      case 'checkbox':
+        return (
+          <input
+            type="checkbox"
+            id={id}
+            name={name}
+            checked={props.value === 'true'}
+            onChange={(e) => {
+              const mockEvent = {
+                target: { name, value: e.target.checked ? 'true' : 'false' }
+              } as React.ChangeEvent<HTMLInputElement>;
+              props.onChange(mockEvent);
+            }}
+            onBlur={onBlur}
+            required={required}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          />
+        );
+      
+      case 'radio': {
+        const options = props.options || [];
+        return (
+          <div className="space-y-2">
+            {options.map((option) => (
+              <div key={option.value} className="flex items-center">
+                <input
+                  type="radio"
+                  id={`${id}-${option.value}`}
+                  name={name}
+                  value={option.value}
+                  checked={props.value === option.value}
+                  onChange={props.onChange}
+                  onBlur={onBlur}
+                  required={required}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label htmlFor={`${id}-${option.value}`} className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                  {option.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        );
+      }
       
       default:
         return null;

@@ -12,13 +12,12 @@ export default function FormBuilderPage() {
     localStorage.setItem('submittedForms', JSON.stringify(submissions));
   };
 
-  const handleFieldsChange = (fields: FieldConfig[]) => {
+  const handleFieldsChange = (_fields: FieldConfig[]) => {
     // Placeholder for side-effects (e.g., analytics) – intentionally left blank
   };
 
   return (
     <ModernFormBuilderLayout
-      initialFields={[]}
       onSubmit={handleSubmit}
       onFieldsChange={handleFieldsChange}
     />

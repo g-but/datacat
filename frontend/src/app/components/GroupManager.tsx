@@ -142,8 +142,8 @@ export function GroupManager({
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Sind Sie sicher, dass Sie die Gruppe "{showDeleteConfirm}" löschen möchten? 
-                Die Felder werden zur Gruppe "Allgemeine Felder" verschoben.
+                Sind Sie sicher, dass Sie die Gruppe &quot;{showDeleteConfirm}&quot; löschen möchten? 
+                Die Felder werden zur Gruppe &quot;Allgemeine Felder&quot; verschoben.
               </p>
               <div className="flex space-x-3">
                 <Button

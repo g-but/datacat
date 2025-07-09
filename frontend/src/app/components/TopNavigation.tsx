@@ -1,12 +1,11 @@
 'use client';
 
-import { Fragment, useState } from 'react';
-import { Dialog, Disclosure, Popover, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { useState } from 'react';
+import { Dialog } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { ThemeToggle } from './ThemeToggle';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import Image from 'next/image';
+import { useAuth } from '../context/AuthContext';
 
 // Define types for navigation items
 type NavItem = {
@@ -33,6 +32,11 @@ const FolderIcon = (props: { className?: string }) => (
     </svg>
 );
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+}
 
 interface TopNavigationProps {
   currentView: 'builder' | 'templates' | 'saved-forms' | 'about';
@@ -53,9 +57,6 @@ const navigation = [
     { name: 'About', href: '/about' },
 ];
 
-function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(' ')
-}
 
 export function TopNavigation({
   currentView,
@@ -90,10 +91,8 @@ export function TopNavigation({
           
           {/* Logo */}
           <div className="flex justify-start lg:w-0 lg:flex-1">
-            <Link href="/builder" passHref>
-              <a onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
-                <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
-              </a>
+            <Link href="/builder" onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
             </Link>
           </div>
 
@@ -132,12 +131,17 @@ export function TopNavigation({
                   <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                     <div className="relative grid gap-6 bg-white dark:bg-gray-700 px-5 py-6 sm:gap-8 sm:p-8">
                       {primaryLinks.map((item) => (
-                        <a
+                        <Link
                           key={item.name}
                           href={item.href}
                           onClick={(e) => {
                             e.preventDefault();
-                            handleViewChange(item.href.replace('/', '') as any);
+                            const view = item.href.replace('/', '');
+                            if (view === 'about') {
+                              onViewChange('about');
+                            } else {
+                              handleViewChange(view as 'builder' | 'templates' | 'saved-forms');
+                            }
                           }}
                           className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
                         >
@@ -146,24 +150,23 @@ export function TopNavigation({
                             <p className="text-base font-medium text-gray-900 dark:text-white">{item.name}</p>
                             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
                           </div>
-                        </a>
+                        </Link>
                       ))}
                     </div>
                     <div className="px-5 py-5 bg-gray-50 dark:bg-gray-800 space-y-6 sm:flex sm:space-y-0 sm:space-x-10 sm:px-8">
                        <div className="flow-root">
-                         <Link href="/about" passHref>
-                           <a
-                             onClick={() => {
-                               onViewChange('about');
-                               setMegaMenuOpen(false);
-                             }}
+                         <Link
+                           href="/about"
+                           onClick={() => {
+                             onViewChange('about');
+                             setMegaMenuOpen(false);
+                           }}
                              className="-m-3 p-3 flex items-center rounded-md text-base font-medium text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                           >
+                         >
                             <svg className="flex-shrink-0 h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                             <span className="ml-3">Über uns</span>
-                           </a>
+                           <span className="ml-3">Über uns</span>
                          </Link>
                        </div>
                     </div>
@@ -172,10 +175,8 @@ export function TopNavigation({
               )}
             </div>
 
-            <Link href="/about" passHref>
-              <a onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
-                Über uns
-              </a>
+            <Link href="/about" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
+              Über uns
             </Link>
           </nav>
           
@@ -212,10 +213,12 @@ export function TopNavigation({
             <div className="flex items-center justify-between">
               <Link href="/" className="-m-1.5 p-1.5">
                 <span className="sr-only">Your Company</span>
-                <img
+                <Image
                   className="h-8 w-auto"
                   src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
                   alt=""
+                  width={32}
+                  height={32}
                 />
               </Link>
               <button
@@ -242,43 +245,42 @@ export function TopNavigation({
                   ))}
                 </div>
                 <div className="py-6">
-                  <ThemeToggle />
                   {!loading && (
                     <>
                       {token && user ? (
-                        <button
-                          onClick={() => {
-                            logout();
-                            setMobileMenuOpen(false);
-                          }}
-                          className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
-                        >
-                          Log out
-                        </button>
-                      ) : (
-                        <>
-                          <Link
-                            href="/login"
-                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 dark:text-white dark:hover:bg-gray-800"
-                            onClick={() => setMobileMenuOpen(false)}
+                        <div>
+                          <p className="text-base font-medium text-gray-900 dark:text-white">
+                            Angemeldet als {user.username}
+                          </p>
+                          <button
+                            onClick={logout}
+                            className="mt-2 w-full whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700"
                           >
-                            Log in
-                          </Link>
+                            Logout
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
                           <Link
                             href="/register"
-                             className="mt-2 -mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
-                             onClick={() => setMobileMenuOpen(false)}
+                            className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
                           >
-                            Register
+                            Registrieren
                           </Link>
-                        </>
+                          <p className="mt-6 text-center text-base font-medium text-gray-500">
+                            Bestehender Kunde?{' '}
+                            <Link href="/login" className="text-indigo-600 hover:text-indigo-500">
+                              Anmelden
+                            </Link>
+                          </p>
+                        </div>
                       )}
                     </>
                   )}
                 </div>
               </div>
             </div>
-        </Dialog.Panel>
+          </Dialog.Panel>
       </Dialog>
     </header>
   );

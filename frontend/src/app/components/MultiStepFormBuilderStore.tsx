@@ -61,7 +61,7 @@ export function MultiStepFormBuilderStore(props: MultiStepFormBuilderStoreProps)
         label: type,
         required: false,
       } as FieldConfig;
-      addField(fieldConfig, steps[currentStep]?.id);
+      addField(type, steps[currentStep]?.id);
     }
     props.onAddField?.(type);
   };
@@ -69,13 +69,6 @@ export function MultiStepFormBuilderStore(props: MultiStepFormBuilderStoreProps)
   return (
     <MultiStepFormBuilder
       {...props}
-      steps={steps}
-      currentStep={currentStep}
-      onStepChange={setCurrentStep}
-      onCreateStep={createStep}
-      onCreateStepAtPosition={createStepAtPosition}
-      onUpdateStep={updateStep}
-      onAddField={handleAddField}
     />
   );
 } 

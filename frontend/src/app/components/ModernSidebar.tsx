@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { FieldConfig, FormStep, FieldTemplate } from '../types/form';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { fieldTemplates } from '../data/fieldTemplates';
 import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
 import { FieldEditor } from './FieldEditor';
+import { PencilSquareIcon, TrashIcon, SquaresPlusIcon, Squares2X2Icon } from '@heroicons/react/24/outline';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface FieldTypeOption {
   type: FieldConfig['type'];
@@ -137,6 +138,7 @@ export function ModernSidebar({
   const [activeTab, setActiveTab] = useState<'structure' | 'add' | 'templates'>('structure');
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
   const [tempStepTitle, setTempStepTitle] = useState<string>('');
+  const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
   
   const allFields = isMultiStep ? steps.flatMap(s => s.fields) : fields;
 
@@ -155,15 +157,23 @@ export function ModernSidebar({
   
   const handleQuickAdd = (type: FieldConfig['type']) => {
     const stepId = isMultiStep ? steps[currentStep]?.id : undefined;
+    if (isMultiStep && !stepId) {
+      console.error("Cannot add field, no step selected.");
+      return;
+    }
     addField(type, stepId);
   };
   
   const handleAddTemplate = (template: FieldTemplate) => {
     const stepId = isMultiStep ? steps[currentStep]?.id : undefined;
+    if (isMultiStep && !stepId) {
+      console.error("Cannot add template, no step selected.");
+      return;
+    }
     addTemplateFields(template, stepId);
   };
   
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
   
@@ -175,7 +185,7 @@ export function ModernSidebar({
     }
   };
   
-  const handleStepDragEnd = (event: DragEndEvent) => {
+  const handleStepDragEnd = (event: any) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -196,10 +206,59 @@ export function ModernSidebar({
     updateStep(stepId, { title: tempStepTitle });
     setEditingStepId(null);
   };
+
+  const [stepIdPendingDelete, setStepIdPendingDelete] = useState<string | null>(null);
+  const handleDeleteStep = (stepId: string) => {
+    setStepIdPendingDelete(stepId);
+  };
+  const confirmDelete = () => {
+    if (stepIdPendingDelete) removeStep(stepIdPendingDelete);
+    setStepIdPendingDelete(null);
+  };
+
+  const toggleStepExpansion = (stepId: string) => {
+    setExpandedSteps(prev => ({ ...prev, [stepId]: !prev[stepId] }));
+  };
   
   const selectedField = allFields.find(f => f.id === selectedFieldId);
 
   const renderStructureTab = () => {
+    // Placeholder when no steps/fields yet
+    if (isMultiStep && steps.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Noch keine Schritte vorhanden.</p>
+          <button
+            onClick={() => addStep({ title: `Schritt 1`, description: '', fields: [], isOptional: false })}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Ersten Schritt hinzufügen
+          </button>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Oder wechseln Sie zum Tab "Vorlagen", um eine vorgefertigte Sektion einzufügen.</p>
+        </div>
+      );
+    }
+
+    if (!isMultiStep && fields.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Keine Felder vorhanden.</p>
+          <button
+            onClick={() => setActiveTab('add')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Feld hinzufügen
+          </button>
+          <button
+            onClick={() => setActiveTab('templates')}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Vorlage auswählen
+          </button>
+        </div>
+      );
+    }
+
     if (isMultiStep) {
       return (
         <DndContext collisionDetection={closestCenter} onDragEnd={handleStepDragEnd}>
@@ -212,12 +271,14 @@ export function ModernSidebar({
                   index={index}
                   currentStep={currentStep}
                   onStepChange={setCurrentStep}
+                  isExpanded={expandedSteps[step.id] ?? false}
+                  onToggleExpansion={() => toggleStepExpansion(step.id)}
                   editingStepId={editingStepId}
                   tempStepTitle={tempStepTitle}
                   onTempStepTitleChange={setTempStepTitle}
                   onEditStepTitle={() => handleEditStepTitle(step)}
                   onSaveStepTitle={() => handleSaveStepTitle(step.id)}
-                  onDeleteStep={() => removeStep(step.id)}
+                  onDeleteStep={() => handleDeleteStep(step.id)}
                 >
                   <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={step.fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
@@ -287,18 +348,19 @@ export function ModernSidebar({
   );
 
   const renderTemplatesTab = () => (
-    <div className="space-y-3">
+    <div className="space-y-2 pr-1">
       {fieldTemplates.map(template => (
-        <div key={template.id} className="p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-          <h4 className="font-semibold">{template.name}</h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{template.description}</p>
-          <button 
-            onClick={() => handleAddTemplate(template)}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Abschnitt hinzufügen
-          </button>
-        </div>
+        <button
+          key={template.id}
+          onClick={() => handleAddTemplate(template)}
+          className="w-full flex items-center p-2 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+        >
+          <span className="text-xl mr-3">{template.icon}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{template.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{template.description}</p>
+          </div>
+        </button>
       ))}
     </div>
   );
@@ -309,30 +371,38 @@ export function ModernSidebar({
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Formular-Struktur</h2>
         <div className="flex items-center mt-2">
-            <input type="checkbox" id="multistep-toggle" checked={isMultiStep} onChange={toggleMultiStep} />
-            <label htmlFor="multistep-toggle" className="ml-2 text-sm font-medium">Multi-Step Formular</label>
+          <span className="text-sm font-medium mr-3">Multi-Step</span>
+          <button
+            onClick={toggleMultiStep}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isMultiStep ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+            title={isMultiStep ? 'Zu Ein-Schritt-Formular wechseln' : 'In Multi-Step umwandeln'}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isMultiStep ? 'translate-x-6' : 'translate-x-1'}`}
+            />
+          </button>
         </div>
       </div>
       
       {/* Tabs */}
       <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
-          className={`flex-1 p-3 text-sm font-medium ${activeTab === 'structure' ? 'bg-white dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}
+          className={`flex-1 p-3 text-sm font-medium border-r first:rounded-l-lg last:rounded-r-lg ${activeTab === 'structure' ? 'bg-white dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}
           onClick={() => setActiveTab('structure')}
         >
-          Struktur
+          <span className="inline-flex items-center space-x-1"><Squares2X2Icon className="w-4 h-4"/><span>Struktur</span></span>
         </button>
         <button
-          className={`flex-1 p-3 text-sm font-medium ${activeTab === 'add' ? 'bg-white dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}
+          className={`flex-1 p-3 text-sm font-medium border-r last:border-none ${activeTab === 'add' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30' : 'hover:bg-blue-50/40 dark:hover:bg-blue-900/10'}`}
           onClick={() => setActiveTab('add')}
         >
-          Hinzufügen
+          <span className="inline-flex items-center space-x-1"><SquaresPlusIcon className="w-4 h-4"/><span>Feld hinzufügen</span></span>
         </button>
         <button
-          className={`flex-1 p-3 text-sm font-medium ${activeTab === 'templates' ? 'bg-white dark:bg-gray-700' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}
+          className={`flex-1 p-3 text-sm font-medium ${activeTab === 'templates' ? 'bg-amber-50 text-amber-700 dark:bg-yellow-900/30' : 'hover:bg-amber-50/40 dark:hover:bg-yellow-900/10'}`}
           onClick={() => setActiveTab('templates')}
         >
-          Vorlagen
+          <span className="inline-flex items-center space-x-1"><SquaresPlusIcon className="w-4 h-4"/><span>Vorlagen</span></span>
         </button>
       </div>
       
@@ -351,6 +421,16 @@ export function ModernSidebar({
           onUpdate={(updates) => onFieldUpdate(selectedField.id, updates)}
         />
       )}
+      <ConfirmDialog
+        isOpen={!!stepIdPendingDelete}
+        title="Schritt löschen"
+        message={`Sind Sie sicher, dass Sie diesen Schritt löschen möchten?
+Alle Felder in diesem Schritt gehen verloren.`}
+        confirmLabel="Löschen"
+        onConfirm={confirmDelete}
+        onCancel={() => setStepIdPendingDelete(null)}
+      />
+
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={onSaveForm} // Use new prop name here
@@ -369,6 +449,8 @@ interface SortableStepItemProps {
   index: number;
   currentStep: number;
   onStepChange: (index: number) => void;
+  isExpanded: boolean;
+  onToggleExpansion: () => void;
   children: React.ReactNode;
   editingStepId: string | null;
   tempStepTitle: string;
@@ -380,37 +462,54 @@ interface SortableStepItemProps {
 
 function SortableStepItem({
   step, index, currentStep, onStepChange, children, editingStepId, tempStepTitle,
-  onTempStepTitleChange, onEditStepTitle, onSaveStepTitle, onDeleteStep
+  onTempStepTitleChange, onEditStepTitle, onSaveStepTitle, onDeleteStep, isExpanded, onToggleExpansion
 }: SortableStepItemProps) {
   const {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({ id: step.id });
 
-  const style: React.CSSProperties = {
+  const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 100 : 'auto',
+  };
+
+  const isEditing = editingStepId === step.id;
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSaveStepTitle();
+    }
+  };
+
+  React.useEffect(() => {
+    if (isEditing) {
+      // Focus logic here if needed, e.g., using a ref
+    }
+  }, [isEditing]);
+
+  const handleHeaderClick = () => {
+    onStepChange(index);
+    onToggleExpansion();
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`p-3 rounded-lg border transition-all duration-200 ${
+    <div ref={setNodeRef} style={style}
+      className={`rounded-lg transition-all duration-300 ${
         currentStep === index
           ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600'
           : 'bg-gray-100 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
       }`}
     >
-      <div className="flex items-center justify-between" onClick={() => onStepChange(index)}>
-         <div className="flex items-center flex-1 min-w-0" {...attributes} {...listeners}>
-            <div className="text-lg mr-3 text-gray-400 dark:text-gray-500 cursor-grab active:cursor-grabbing">⠿</div>
+      <div className="flex items-center justify-between p-3 cursor-pointer" onClick={handleHeaderClick}>
+         <div className="flex items-center flex-1 min-w-0">
+            <div ref={setActivatorNodeRef} className="text-lg mr-3 text-gray-400 dark:text-gray-500 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>⠿</div>
             {editingStepId === step.id ? (
                 <input 
                     type="text"
@@ -427,11 +526,15 @@ function SortableStepItem({
             )}
         </div>
         <div className="flex items-center space-x-1 ml-2">
-            <button onClick={(e)=>{e.stopPropagation(); onEditStepTitle();}} className="p-1 text-gray-400 hover:text-blue-600">Edit</button>
-            <button onClick={(e)=>{e.stopPropagation(); onDeleteStep();}} className="p-1 text-gray-400 hover:text-red-600">Del</button>
+            <button onClick={(e)=>{e.stopPropagation(); onEditStepTitle();}} className="p-1 text-gray-400 hover:text-blue-600" title="Bearbeiten">
+              <PencilSquareIcon className="w-5 h-5" />
+            </button>
+            <button onClick={(e)=>{e.stopPropagation(); onDeleteStep();}} className="p-1 text-gray-400 hover:text-red-600" title="Löschen">
+              <TrashIcon className="w-5 h-5" />
+            </button>
         </div>
       </div>
-      {currentStep === index && <div className="mt-2 pl-4 border-l-2 border-blue-300 dark:border-blue-600">{children}</div>}
+      {isExpanded && <div className="p-3 border-t border-gray-200 dark:border-gray-600">{children}</div>}
     </div>
   );
 }

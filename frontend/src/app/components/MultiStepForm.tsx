@@ -103,7 +103,7 @@ export function MultiStepForm({ steps, onSubmit, onStepsChange }: MultiStepFormP
       onSubmit(formData);
     } else {
       // Find the first step with errors and navigate to it
-      const errorFields = allErrors.map(error => error.field);
+      const errorFields = allErrors;
       const firstErrorStep = steps.findIndex(step => 
         step.fields.some(field => errorFields.includes(field.name))
       );

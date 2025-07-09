@@ -6,15 +6,6 @@ export interface ValidationError {
   message: string;
 }
 
-export interface ValidationRule {
-  required?: boolean;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: RegExp;
-  email?: boolean;
-  custom?: (value: string) => string | null;
-}
-
 export function useFormValidation(fields: FieldConfig[]) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -125,5 +116,5 @@ export function useFormValidation(fields: FieldConfig[]) {
   const getFieldError = (fieldName: string) => errors[fieldName];
   const hasErrors = Object.values(errors).some(error => error);
 
-  return { validateForm, validateSingleField, getFieldError, hasErrors, errors };
+  return { validateForm, validateSingleField, getFieldError, hasErrors, errors, clearErrors };
 }

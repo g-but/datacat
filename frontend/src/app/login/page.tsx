@@ -32,8 +32,8 @@ const LoginPage = () => {
 
       const { token } = await res.json();
       login(token);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const LoginPage = () => {
           </div>
         </form>
         <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
             Create one
           </Link>

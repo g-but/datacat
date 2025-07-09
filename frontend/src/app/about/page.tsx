@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { CheckCircleIcon, LightBulbIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 const AboutPage = () => {
   return (
@@ -21,7 +22,7 @@ const AboutPage = () => {
                         </p>
                     </div>
                     <div className="mt-10 max-w-2xl lg:mt-0 lg:max-w-none lg:mx-0">
-                        <img src="/logo.svg" alt="App-Logo" className="mt-10 w-48 h-48 object-cover rounded-lg" />
+                        <Image src="/logo.svg" alt="App-Logo" width={192} height={192} className="mt-10 w-48 h-48 object-cover rounded-lg" />
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { FieldConfig, FieldTemplate } from '../types/form';
 import { EmptyStep } from './EmptyStep';
 import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
@@ -12,11 +12,9 @@ export interface ModernFieldBuilderProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onUpdateField: (updates: Partial<FieldConfig>) => void;
-  onRemove: () => void;
-  onDuplicate: () => void;
+  onRemoveField: () => void;
+  onDuplicateField: () => void;
   error?: string | null;
-  isDragging?: boolean;
-  dragProps?: any;
 }
 
 export function ModernFieldBuilder({
@@ -24,16 +22,30 @@ export function ModernFieldBuilder({
   value,
   onChange,
   onUpdateField,
-  onRemove,
-  onDuplicate,
+  onRemoveField,
+  onDuplicateField,
   error,
-  isDragging = false,
-  dragProps = {}
 }: ModernFieldBuilderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState(field.label);
   const [tempPlaceholder, setTempPlaceholder] = useState(field.placeholder || '');
   const [showOptions, setShowOptions] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+  };
 
   const handleLabelClick = () => {
     setIsEditing(true);
@@ -104,6 +116,17 @@ export function ModernFieldBuilder({
         options: undefined,
         rows: 3,
       },
+      checkbox: {
+        label: 'Checkbox',
+        options: [{ value: 'true', label: 'Aktiviert' }]
+      },
+      radio: {
+        label: 'Radio',
+        options: [
+            { value: 'option1', label: 'Option 1' },
+            { value: 'option2', label: 'Option 2' },
+        ],
+      }
     };
 
     const defaults = fieldDefaults[newType];
@@ -125,11 +148,13 @@ export function ModernFieldBuilder({
     tel: 'Telefon',
     date: 'Datum',
     select: 'Auswahl',
-    textarea: 'Textbereich'
+    textarea: 'Textbereich',
+    checkbox: 'Checkbox',
+    radio: 'Radio'
   };
 
   return (
-    <div className={`group relative bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 ${
+    <div ref={setNodeRef} style={style} className={`group relative bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 ${
       isDragging ? 'border-blue-500 shadow-lg scale-105' : 
       error ? 'border-red-300 dark:border-red-600' : 
       'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
@@ -138,7 +163,8 @@ export function ModernFieldBuilder({
       {/* Drag Handle */}
       <div
         className="absolute left-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-        {...(dragProps as any)}
+        {...attributes}
+        {...listeners}
       >
         <div className="absolute -inset-1 bg-blue-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,6 +295,36 @@ export function ModernFieldBuilder({
             />
           )}
 
+          {field.type === 'checkbox' && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={value === 'true'}
+                onChange={onChange}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label className="ml-3 text-gray-700 dark:text-gray-300">{field.options?.[0]?.label || 'Label'}</label>
+            </div>
+          )}
+
+          {field.type === 'radio' && (
+            <div className="flex flex-col space-y-2">
+              {(field.options || []).map(option => (
+                <label key={option.value} className="flex items-center">
+                  <input
+                    type="radio"
+                    name={field.name}
+                    value={option.value}
+                    checked={value === option.value}
+                    onChange={onChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-3 text-gray-700 dark:text-gray-300">{option.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
 
@@ -310,7 +366,7 @@ export function ModernFieldBuilder({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDuplicate();
+                onDuplicateField();
               }}
               className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
               title="Feld duplizieren"
@@ -320,7 +376,7 @@ export function ModernFieldBuilder({
               </svg>
             </button>
             <button
-              onClick={onRemove}
+              onClick={onRemoveField}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
               title="Feld löschen"
             >
@@ -344,43 +400,6 @@ export function ModernFieldBuilder({
 }
 
 // THIS IS THE SECOND COMPONENT IN THE FILE
-
-interface SortableFieldProps {
-  field: FieldConfig;
-  children: React.ReactNode;
-}
-
-function SortableField({ field, children }: SortableFieldProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.id });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 10 : 'auto',
-  };
-  
-  const childWithDragProps = React.cloneElement(
-    children as React.ReactElement<ModernFieldBuilderProps>,
-    {
-      isDragging,
-      dragProps: { ...attributes, ...listeners },
-    }
-  );
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      {childWithDragProps}
-    </div>
-  );
-}
 
 interface ModernFormBuilderProps {
   fields: FieldConfig[];
@@ -416,17 +435,16 @@ export function ModernFormBuilder({
     <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
       <div className="space-y-6">
         {fields.map(field => (
-          <SortableField key={field.id} field={field}>
             <ModernFieldBuilder
+              key={field.id}
               field={field}
               value={formData[field.name] || ''}
               onChange={onFieldChange}
               onUpdateField={(updates) => onUpdateField(field.id, updates)}
-              onRemove={() => onRemoveField(field.id)}
-              onDuplicate={() => onDuplicateField(field.id)}
+              onRemoveField={() => onRemoveField(field.id)}
+              onDuplicateField={() => onDuplicateField(field.id)}
               error={errors[field.name]}
             />
-          </SortableField>
         ))}
       </div>
     </SortableContext>

@@ -1,14 +1,20 @@
 export interface FieldConfig {
   id: string;
-  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea';
-  name: string;
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio';
   label: string;
+  name: string;
   required?: boolean;
   placeholder?: string;
-  options?: { value: string; label: string }[];
-  rows?: number;
-  step?: string; // New: ID of the step this field belongs to
-  group?: string; // New: field group within a step
+  options?: Array<{ label: string; value: string }>; // For select, radio
+  defaultValue?: string | boolean;
+  step?: string; // For multi-step forms
+  rows?: number; // For textarea
+  group?: string; // For grouping fields
+  conditionalLogic?: {
+    fieldId: string; // ID of the field to check
+    condition: 'isEqualTo' | 'isNotEqualTo' | 'contains' | 'doesNotContain';
+    value: string;
+  };
 }
 
 export interface FormField extends FieldConfig {

@@ -10,11 +10,10 @@ interface AutoSaveData {
 
 export function useAutoSave(
   formData: FormData,
-  fields: FieldConfig[],
-  formId: string = 'hr-intake-form'
+  fields: FieldConfig[]
 ) {
   const [savedData, setSavedData, removeSavedData] = useLocalStorage<AutoSaveData | null>(
-    `autosave-${formId}`,
+    `autosave-hr-intake-form`,
     null
   );
   
