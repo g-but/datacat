@@ -175,7 +175,7 @@ export function FormPreview({
             </div>
             <div className="text-right">
               <div className="text-xs text-gray-500 dark:text-gray-500">
-                Erstellt mit Kivi-HR Form Builder
+                Erstellt mit Form Builder
               </div>
             </div>
           </div>

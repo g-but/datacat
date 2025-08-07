@@ -115,7 +115,7 @@ export function DynamicForm({ initialFields, onSubmit, onFieldsChange }: Dynamic
   };
 
   const addQuickField = (type: FieldConfig['type']) => {
-    const fieldNames = {
+    const fieldNames: Record<FieldConfig['type'], string> = {
       text: 'Textfeld',
       email: 'E-Mail',
       tel: 'Telefon',
@@ -123,7 +123,12 @@ export function DynamicForm({ initialFields, onSubmit, onFieldsChange }: Dynamic
       select: 'Auswahl',
       textarea: 'Textbereich',
       checkbox: 'Checkbox',
-      radio: 'Radio'
+      radio: 'Radio',
+      number: 'Zahl',
+      range: 'Bereich',
+      file: 'Datei',
+      url: 'URL',
+      password: 'Passwort'
     };
 
     const fieldConfig: FieldConfig = {

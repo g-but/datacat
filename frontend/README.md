@@ -37,8 +37,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-08
-last_modified_summary: "Switched form builder to a single Zustand store; added usage guidelines and API overview."
+last_modified_date: 2025-07-09
+last_modified_summary: "Enabled drag-and-drop of fields between steps in sidebar; unified DnD context; updated UI documentation sections."
 
 ---
 
@@ -46,11 +46,11 @@ last_modified_summary: "Switched form builder to a single Zustand store; added u
 
 ## Drag-and-Drop Sortierung
 
-Das zentrale Formular-Canvas unterstützt jetzt modernes Drag-and-Drop über **@dnd-kit**. So funktioniert's:
+Das zentrale Formular-Canvas **und die Sidebar** unterstützen jetzt modernes Drag-and-Drop über **@dnd-kit**. Sie können Felder nicht nur innerhalb eines Schritts, sondern auch **zwischen** Schritten verschieben. So funktioniert's:
 
 1. Bewegen Sie den Mauszeiger über ein Feld, bis der Cursor zur "Hand" wird.
 2. Klicken, halten und ziehen Sie das Feld an die gewünschte Stelle.
-3. Die benachbarten Felder gleiten nach oben / unten, sodass klar ersichtlich ist, wo das Element landet.
+3. Die benachbarten Felder gleiten nach oben / unten, sodass klar ersichtlich ist, wo das Element landet – selbst wenn Sie von Schritt 2 zu Schritt 1 ziehen.
 
 ### Technische Details
 
@@ -140,3 +140,21 @@ function RequiredFieldBadge({ fieldId }: { fieldId: string }) {
 ```
 
 ---
+
+## Neuerungen ab 2025-07-09
+
+### Inline-Add-Buttons im Single-Step Modus
+
+Der Ein-Seiten-Builder zeigt jetzt nach jeder Feldliste dieselben 「＋ Feld」 und 「＋ Sektion」-Schaltflächen wie der Multi-Step-Builder. Dadurch können Sie ohne Umwege neue Elemente einfügen, ganz egal ob Ihr Formular in Schritten aufgebaut ist oder nicht.
+
+### Formular-Titel nun oben
+
+Der Titel des Formulars befindet sich jetzt als grosses, direkt editierbares Eingabefeld ganz oben in der Builder-Ansicht. Dadurch wirkt er wie eine eigentliche Überschrift und ist sofort sichtbar.
+
+### Einheitliche Button-Farben
+
+Alle Call-to-Action-Buttons in der Fussleiste (Speichern, Vorschau, + Neu) verwenden jetzt Indigo-Töne und folgen damit einem klaren Farbkonzept.
+
+### Gleiche Feldbreite im Single-Step
+
+Felder im Ein-Seiten-Modus sind nun ebenfalls auf `max-w-4xl` begrenzt, identisch zum Multi-Step-Modus. Dadurch wirken die Layouts konsistent.

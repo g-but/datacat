@@ -1,15 +1,20 @@
 export interface FieldConfig {
   id: string;
-  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio';
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'number' | 'range' | 'file' | 'url' | 'password';
   label: string;
   name: string;
   required?: boolean;
   placeholder?: string;
   options?: Array<{ label: string; value: string }>; // For select, radio
   defaultValue?: string | boolean;
-  step?: string; // For multi-step forms
+  stepId?: string; // For multi-step forms
   rows?: number; // For textarea
   group?: string; // For grouping fields
+  min?: number; // For number, range fields
+  max?: number; // For number, range fields
+  stepSize?: number; // For range fields
+  accept?: string; // For file fields
+  multiple?: boolean; // For file fields
   conditionalLogic?: {
     fieldId: string; // ID of the field to check
     condition: 'isEqualTo' | 'isNotEqualTo' | 'contains' | 'doesNotContain';
