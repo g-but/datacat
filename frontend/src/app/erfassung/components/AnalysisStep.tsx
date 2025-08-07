@@ -222,7 +222,6 @@ export function AnalysisStep({ photos, onAnalysisComplete, product }: AnalysisSt
                 { key: 'categories', label: 'Kategorien', value: `${analysisResult.mainCategoryA} > ${analysisResult.subCategoryA}` }
               ].map(({ key, label, value }) => {
                 const confidence = analysisResult.confidence[key];
-                const source = analysisResult.sources[key];
                 const confidenceColor = confidence >= 0.9 ? 'text-green-600 dark:text-green-400' :
                                       confidence >= 0.7 ? 'text-yellow-600 dark:text-yellow-400' :
                                       'text-red-600 dark:text-red-400';
@@ -253,10 +252,6 @@ export function AnalysisStep({ photos, onAnalysisComplete, product }: AnalysisSt
                     
                     <p className="text-gray-900 dark:text-white font-medium mb-2">{value}</p>
                     
-                    <div className="flex items-start space-x-2 text-xs">
-                      <span className="text-gray-500 dark:text-gray-400 font-medium">Quelle:</span>
-                      <span className="text-gray-600 dark:text-gray-300">{source}</span>
-                    </div>
                     
                     {confidence < 0.8 && (
                       <div className="mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded px-2 py-1">
