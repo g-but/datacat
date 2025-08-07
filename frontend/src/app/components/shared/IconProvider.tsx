@@ -26,7 +26,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
   ShareIcon,
-  DownloadIcon,
+  ArrowDownTrayIcon,
   
   // Status Icons
   CheckIcon,
@@ -85,7 +85,7 @@ export const ActionIcons = {
   View: EyeIcon,
   Hide: EyeSlashIcon,
   Share: ShareIcon,
-  Download: DownloadIcon
+  Download: ArrowDownTrayIcon
 };
 
 export const StatusIcons = {
@@ -144,7 +144,7 @@ const sizeClasses = {
 
 export function createIconComponent(IconComponent: React.ComponentType<{ className?: string }>) {
   return function Icon({ className = '', size = 'md', color, ...props }: IconProps & any) {
-    const sizeClass = sizeClasses[size];
+    const sizeClass = sizeClasses[size as keyof typeof sizeClasses];
     const combinedClassName = `${sizeClass} ${className}`;
     const style = color ? { color } : undefined;
     

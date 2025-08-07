@@ -72,7 +72,7 @@ export function DataReviewStep({ analysisResult, onReviewComplete, product }: Da
     rows?: number;
   }) => {
     const confidence = analysisResult.confidence[field] || analysisResult.confidence.title || 0;
-    const source = analysisResult.sources?.[field] || 'KI-Analyse';
+    const source = 'KI-Analyse';
     const isEditing = editingField === field;
     const isModified = formData[field as keyof typeof formData] !== analysisResult[field as keyof typeof analysisResult];
     

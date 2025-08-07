@@ -42,7 +42,7 @@ export function useApiRequest<T = any>(options: UseApiRequestOptions = {}): UseA
       };
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(url, {
@@ -59,7 +59,7 @@ export function useApiRequest<T = any>(options: UseApiRequestOptions = {}): UseA
         return null;
       }
 
-      const responseData = result.data || result;
+      const responseData = result.data ?? (result as T);
       setData(responseData);
       options.onSuccess?.(responseData);
       return responseData;
