@@ -209,3 +209,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Transform your forms into intelligence. Start building with Formular today.**
+
+🚀 **Now deployed on Vercel with automated CI/CD from GitHub!**
