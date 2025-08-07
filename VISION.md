@@ -1,13 +1,13 @@
-# Kivi-HR.md
+# Vision – Formular
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-08
-last_modified_summary: "Added documentation metadata block."
+last_modified_date: 2025-07-28
+last_modified_summary: "Updated for production roadmap with form sharing and LLM analysis capabilities."
 ---
 
-##  Project: Kivi-HR – AI-Ready Intake System (Stage 1: HR Use Case)
+##  Project: Formular – AI-Ready Intake System (Universal Form Builder)
 
-Kivi-HR is the **intake engine** framework for all future Botsmann solutions. The **first implementation** is an AI-powered HR module — a system that collects employee data through a beautiful, dynamic frontend and eventually feeds that data to an AI for task matching, development suggestions, and hiring guidance.
+Formular is the **intake engine** framework for all future Botsmann solutions. The system is designed to collect data for **any** domain via a beautiful, dynamic frontend and eventually feed that data to AI pipelines for downstream automation.
 
 This document outlines:
 - The **vision**, **success metrics**, and **risks**
@@ -16,23 +16,24 @@ This document outlines:
 
 ---
 
-##  Big Picture: What Is Kivi-HR?
-Kivi-HR is a modular, **intake form builder** and data pipeline that:
+##  Big Picture: What Is Formular?
+Formular is a modular, **intake form builder** and data pipeline that:
 1. Starts with an ultra-modern, consumer-grade frontend for data entry
 2. Stores form data in a scalable, well-structured backend
 3. Makes the data accessible to LLMs for downstream tasks
 
 This system is the foundation for:
--  HR & Talent Management (current use case)
+-  HR & Talent Management
 -  Medical intake (patients)
 - ⚖️ Legal intake (clients)
 -  Public sector onboarding (citizens)
+-  Any custom intake scenario
 
 ---
 
-##  Current Scope: AI-Powered HR Intake Form
+##  Current Scope: AI-Powered Universal Form Builder
 
-We're starting with a fully dynamic HR intake form where:
+We're building a fully dynamic form builder where:
 - HR can enter new employee data
 - Fields can be added/removed per person
 - Data syncs to a database in real-time
@@ -128,7 +129,7 @@ We're starting with a fully dynamic HR intake form where:
 ---
 
 ##  Notes
-- Kivi-HR is the flagship for our intake system architecture
+- The Universal Form Builder is the flagship for our intake system architecture
 - Every future intake app will follow this pattern: `form → database → LLM`
 - Start small, ship fast, polish relentlessly
 

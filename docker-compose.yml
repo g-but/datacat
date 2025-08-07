@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: formular-postgres
+    environment:
+      POSTGRES_DB: formbuilder
+      POSTGRES_USER: formbuilder
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - formular-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formbuilder -d formbuilder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and job queues
+  redis:
+    image: redis:7-alpine
+    container_name: formular-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - formular-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: formular-backend
+    environment:
+      NODE_ENV: development
+      PORT: 5001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: formbuilder
+      DB_USER: formbuilder
+      DB_PASSWORD: devpassword
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      DATABASE_URL: postgresql://formbuilder:devpassword@postgres:5432/formbuilder
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - formular-network
+    volumes:
+      - ./backend:/app/backend:ro
+      - backend_node_modules:/app/backend/node_modules
+    command: ["npm", "run", "dev:backend"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Next.js Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: formular-frontend
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:5001
+      NEXT_PUBLIC_BRAND_PRESET: generic
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - formular-network
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - frontend_node_modules:/app/frontend/node_modules
+      - ./frontend/.next:/app/frontend/.next
+    command: ["npm", "run", "dev:frontend"]
+
+  # Database Migration Service (runs once)
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: formular-migrate
+    environment:
+      DATABASE_URL: postgresql://formbuilder:devpassword@postgres:5432/formbuilder
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - formular-network
+    command: ["npx", "prisma", "migrate", "deploy"]
+    profiles:
+      - migrate
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_node_modules:
+    driver: local
+  frontend_node_modules:
+    driver: local
+
+networks:
+  formular-network:
+    driver: bridge 
