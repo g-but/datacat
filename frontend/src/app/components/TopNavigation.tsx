@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog } from '@headlessui/react';
+import { Dialog, Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
+import { useBrandName } from '../../hooks/useBranding';
 
 // Define types for navigation items
 type NavItem = {
@@ -31,6 +33,12 @@ const FolderIcon = (props: { className?: string }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
     </svg>
 );
+const CameraIcon = (props: { className?: string }) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+);
 
 interface User {
   id: number;
@@ -40,14 +48,7 @@ interface User {
 
 interface TopNavigationProps {
   currentView: 'builder' | 'templates' | 'saved-forms' | 'about';
-  onViewChange: (view: 'builder' | 'templates' | 'saved-forms' | 'about') => void;
-  // Other props from the old component can be added here if needed
-  onNewForm: () => void;
-  onSaveForm: () => void;
-  onPreviewForm: () => void;
-  formTitle: string;
-  onTitleChange: (title: string) => void;
-  hasUnsavedChanges: boolean;
+  onViewChange?: (view: 'builder' | 'templates' | 'saved-forms' | 'about') => void;
 }
 
 const navigation = [
@@ -55,21 +56,17 @@ const navigation = [
     { name: 'Forms', href: '/forms' },
     { name: 'Templates', href: '/templates' },
     { name: 'About', href: '/about' },
+    { name: 'Blog', href: '/blog' },
 ];
 
 
 export function TopNavigation({
   currentView,
-  onViewChange,
-  onNewForm,
-  onSaveForm,
-  onPreviewForm,
-  formTitle,
-  onTitleChange,
-  hasUnsavedChanges,
+  onViewChange = () => {},
 }: TopNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { token, user, logout, loading } = useAuth(); // Use the auth context
+  const brandName = useBrandName();
 
   const [isMegaMenuOpen, setMegaMenuOpen] = useState(false);
 
@@ -77,6 +74,7 @@ export function TopNavigation({
     { name: 'Formular Builder', href: '/builder', description: 'Erstellen und bearbeiten Sie Ihre Formulare.', icon: DocumentChartBarIcon },
     { name: 'Vorlagen-Bibliothek', href: '/templates', description: 'Starten Sie mit einer vorgefertigten Vorlage.', icon: DocumentDuplicateIcon },
     { name: 'Gespeicherte Formulare', href: '/forms', description: 'Verwalten Sie Ihre gespeicherten Formulare.', icon: FolderIcon },
+    { name: 'Erfassung', href: '/erfassung', description: 'KI-gestützte Produktkatalogisierung mit Fotoscan.', icon: CameraIcon },
   ];
   
   const handleViewChange = (view: 'builder' | 'templates' | 'saved-forms') => {
@@ -91,8 +89,8 @@ export function TopNavigation({
           
           {/* Logo */}
           <div className="flex justify-start lg:w-0 lg:flex-1">
-            <Link href="/builder" onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Form Builder</span>
+            <Link href="/" onClick={() => onViewChange('builder')} className="flex items-center space-x-2">
+              <span className="text-3xl font-bold text-gray-900 dark:text-white">{brandName}</span>
             </Link>
           </div>
 
@@ -126,7 +124,7 @@ export function TopNavigation({
               {isMegaMenuOpen && (
                 <div 
                     className="absolute z-10 -ml-4 mt-3 transform px-2 w-screen max-w-md sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2"
-                    onMouseLeave={() => setMegaMenuOpen(false)}
+                    onMouseLeave={() => setTimeout(() => setMegaMenuOpen(false), 300)}
                 >
                   <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                     <div className="relative grid gap-6 bg-white dark:bg-gray-700 px-5 py-6 sm:gap-8 sm:p-8">
@@ -178,34 +176,58 @@ export function TopNavigation({
             <Link href="/about" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
               Über uns
             </Link>
+            <Link href="/blog" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
+              Blog
+            </Link>
           </nav>
-          
-           {/* Actions (only for builder view) */}
-          {currentView === 'builder' && (
-             <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-                <input 
-                  type="text"
-                  value={formTitle}
-                  onChange={(e) => onTitleChange(e.target.value)}
-                  className="w-48 mr-4 p-2 border rounded-md bg-white dark:bg-gray-700 text-sm"
-                />
-                 <button onClick={onPreviewForm} className="whitespace-nowrap text-base font-medium text-gray-500 hover:text-gray-900">
-                     Vorschau
-                 </button>
-                 <button
-                     onClick={onSaveForm}
-                     className="ml-8 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-                 >
-                     Speichern {hasUnsavedChanges && <span className="ml-2 w-2 h-2 bg-green-400 rounded-full"></span>}
-                 </button>
-                 <button
-                     onClick={onNewForm}
-                     className="ml-2 whitespace-nowrap inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
-                 >
-                     + Neu
-                 </button>
-             </div>
-          )}
+ 
+           {/* Auth (desktop) */}
+          <div className="hidden md:flex items-center space-x-6">
+            {!loading && (
+              token && user ? (
+                <Menu as="div" className="relative inline-block text-left">
+                  <div>
+                    <Menu.Button className="flex items-center justify-center w-9 h-9 rounded-full bg-indigo-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      {user.username.charAt(0).toUpperCase()}
+                    </Menu.Button>
+                  </div>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <Menu.Items className="absolute right-0 mt-2 w-40 origin-top-right divide-y divide-gray-200 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 dark:divide-gray-700">
+                      <div className="px-1 py-1">
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link href="/profile" className={`${active ? 'bg-gray-100 dark:bg-gray-700' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 dark:text-gray-100`}>
+                              Profil
+                            </Link>
+                          )}
+                        </Menu.Item>
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button onClick={logout} className={`${active ? 'bg-gray-100 dark:bg-gray-700' : ''} group flex w-full items-center rounded-md px-2 py-2 text-sm text-gray-900 dark:text-gray-100`}>
+                              Logout
+                            </button>
+                          )}
+                        </Menu.Item>
+                      </div>
+                    </Menu.Items>
+                  </Transition>
+                </Menu>
+              ) : (
+                <>
+                  <Link href="/login" className="text-base font-medium text-gray-500 hover:text-gray-900">Anmelden</Link>
+                  <Link href="/register" className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700">Registrieren</Link>
+                </>
+              )
+            )}
+          </div>
         </div>
       </div>
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>

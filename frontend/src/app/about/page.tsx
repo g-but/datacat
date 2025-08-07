@@ -1,112 +1,412 @@
 'use client'
 
-import React from 'react';
-import { CheckCircleIcon, LightBulbIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
+import React, { useState } from 'react';
+import { 
+  EyeIcon, SpeakerWaveIcon, CpuChipIcon, 
+  DocumentTextIcon, CameraIcon, SparklesIcon,
+  ChevronDownIcon, ChevronRightIcon,
+  RocketLaunchIcon, LightBulbIcon, CheckCircleIcon
+} from '@heroicons/react/24/outline';
+import Link from 'next/link';
 
 const AboutPage = () => {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  const isExpanded = (sectionId: string) => expandedSections.has(sectionId);
+
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <main>
-        {/* Hero Section */}
-        <div className="relative isolate overflow-hidden bg-gradient-to-b from-indigo-100/20 pt-14">
-            <div className="absolute inset-y-0 right-1/2 -z-10 -mr-96 w-[200%] origin-top-right skew-x-[-30deg] bg-white dark:bg-gray-800 shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50 dark:ring-indigo-900 sm:-mr-80 lg:-mr-96" aria-hidden="true" />
-            <div className="mx-auto max-w-7xl px-6 py-32 sm:py-40 lg:px-8">
-                <div className="mx-auto max-w-2xl lg:mx-0 lg:grid lg:max-w-none lg:grid-cols-2 lg:gap-x-16 lg:gap-y-6 xl:grid-cols-1 xl:grid-rows-1 xl:gap-x-8">
-                    <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl lg:col-span-2 xl:col-auto">
-                        Die Zukunft der Formularerstellung
-                    </h1>
-                    <div className="mt-6 max-w-xl lg:mt-0 xl:col-end-1 xl:row-start-1">
-                        <p className="text-lg leading-8 text-gray-600 dark:text-gray-300">
-                            Wir revolutionieren die Art und Weise, wie Formulare erstellt, verwaltet und analysiert werden. Unsere Mission ist es, den Prozess der Datenerfassung von einer mühsamen Aufgabe in eine intuitive, intelligente und nahtlose Erfahrung zu verwandeln. Wir glauben, dass leistungsstarke Werkzeuge nicht kompliziert sein müssen.
-                        </p>
-                    </div>
-                    <div className="mt-10 max-w-2xl lg:mt-0 lg:max-w-none lg:mx-0">
-                        <Image src="/logo.svg" alt="App-Logo" width={192} height={192} className="mt-10 w-48 h-48 object-cover rounded-lg" />
-                    </div>
-                </div>
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-blue-900/20 py-32">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h1 className="text-6xl font-bold text-gray-900 dark:text-white mb-8 leading-tight">
+            Bringen Sie <span className="text-blue-600">alles</span> ins System
+          </h1>
+          <p className="text-2xl text-gray-600 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+            Jeden Tag verbringen Menschen bei der Arbeit unzählige Stunden damit, Informationen in Systeme einzugeben. 
+            Wir automatisieren diesen gesamten Prozess – <em>intelligent und mühelos</em>.
+          </p>
+          
+          <div className="flex justify-center space-x-8 mb-16">
+            <div className="flex items-center space-x-3 text-gray-600 dark:text-gray-300">
+              <DocumentTextIcon className="h-8 w-8 text-blue-600" />
+              <span className="text-lg font-medium">Formulare</span>
             </div>
-            <div className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-t from-white dark:from-gray-900 sm:h-32" />
-        </div>
-
-        {/* Content Section */}
-        <div className="mx-auto mt-16 max-w-7xl px-6 sm:mt-20 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:max-w-none">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Unsere Vision</h2>
-              <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-400">
-                Wir gestalten eine Zukunft, in der intelligente Technologie die Datenerfassung vereinfacht.
-              </p>
+            <div className="text-4xl text-gray-400">+</div>
+            <div className="flex items-center space-x-3 text-gray-600 dark:text-gray-300">
+              <CameraIcon className="h-8 w-8 text-green-600" />
+              <span className="text-lg font-medium">Sensoren</span>
             </div>
-            <dl className="mt-16 grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-3">
-              <div className="flex flex-col items-center text-center">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900 dark:text-white">
-                  <CheckCircleIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
-                  Mühelose Erstellung
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-gray-300">
-                  <p className="flex-auto">
-                    Unser intuitiver Drag-and-Drop-Builder macht die Formularerstellung zum Kinderspiel. Konzentrieren Sie sich auf die Fragen, nicht auf das technische Wie.
-                  </p>
-                </dd>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900 dark:text-white">
-                  <LightBulbIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
-                  Intelligente Automatisierung
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-gray-300">
-                  <p className="flex-auto">
-                    In naher Zukunft wird unsere KI-gestützte Engine Formulare basierend auf Ihren Zielen vorschlagen, optimieren und sogar automatisch erstellen können.
-                  </p>
-                </dd>
-              </div>
-              
-              <div className="flex flex-col items-center text-center">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900 dark:text-white">
-                  <RocketLaunchIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
-                  Zukünftige Innovation
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-gray-300">
-                  <p className="flex-auto">
-                    Wir sind bestrebt, die Grenzen der Formulartechnologie zu erweitern. Erwarten Sie Integrationen, erweiterte Analysen und Conversational Forms.
-                  </p>
-                </dd>
-              </div>
-            </dl>
+            <div className="text-4xl text-gray-400">=</div>
+            <div className="flex items-center space-x-3 text-gray-600 dark:text-gray-300">
+              <SparklesIcon className="h-8 w-8 text-purple-600" />
+              <span className="text-lg font-medium">KI-Intelligenz</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* CTA Section */}
-        <div className="mx-auto max-w-7xl px-6 my-24 sm:my-32 lg:px-8">
-            <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
-                <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Gestalten Sie die Zukunft mit uns.
-                </h2>
-                <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-                    Haben Sie Ideen oder Feedback? Wir sind immer offen für Anregungen aus der Community, um unser Produkt noch besser zu machen.
-                </p>
-                <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <a href="/builder" className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
-                        Formular-Builder starten
-                    </a>
-                    <a href="#" className="text-sm font-semibold leading-6 text-white">
-                        Kontakt <span aria-hidden="true">→</span>
-                    </a>
-                </div>
-                 <svg viewBox="0 0 1024 1024" className="absolute left-1/2 top-1/2 -z-10 h-[64rem] w-[64rem] -translate-x-1/2 [mask-image:radial-gradient(closest-side,white,transparent)]" aria-hidden="true">
-                    <circle cx={512} cy={512} r={512} fill="url(#827591b1-ce8c-4110-b064-7cb85a0b1217)" fillOpacity="0.7" />
-                    <defs>
-                        <radialGradient id="827591b1-ce8c-4110-b064-7cb85a0b1217">
-                            <stop stopColor="#7775D6" />
-                            <stop offset={1} stopColor="#E935C1" />
-                        </radialGradient>
-                    </defs>
+      {/* The Problem Section */}
+      <div className="py-24 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-5xl font-bold text-center text-gray-900 dark:text-white mb-16">
+            Das Problem, das wir lösen
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-12 mb-16">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="h-10 w-10 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Zeitverschwendung</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Millionen von Arbeitsstunden werden täglich mit manueller Dateneingabe verschwendet
+              </p>
             </div>
+            
+            <div className="text-center">
+              <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="h-10 w-10 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L5.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Fehleranfällig</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Manuelle Eingaben führen zu Inkonsistenzen und kostspieligen Fehlern
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <svg className="h-10 w-10 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Verpasste Chancen</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Wertvolle Insights bleiben in den Daten verborgen, ohne intelligente Analyse
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* Our Vision Section */}
+      <div className="py-24 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-8">
+              Unsere Vision: Das intelligente System
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+              Stellen Sie sich ein System vor, das wie ein menschliches Gehirn funktioniert – mit Augen und Ohren, die alles erfassen, 
+              und einem Gehirn, das alles versteht und intelligent handelt.
+            </p>
+          </div>
+
+          {/* Progressive Disclosure Sections */}
+          <div className="space-y-6">
+            {/* Forms as Ears Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <button
+                onClick={() => toggleSection('forms')}
+                className="w-full p-8 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center">
+                      <SpeakerWaveIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        Formulare sind die Ohren des Systems
+                      </h3>
+                      <p className="text-lg text-gray-600 dark:text-gray-400">
+                        Menschen geben Informationen ein – wir hören zu und verstehen
+                      </p>
+                    </div>
+                  </div>
+                  {isExpanded('forms') ? (
+                    <ChevronDownIcon className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <ChevronRightIcon className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+              </button>
+              
+              {isExpanded('forms') && (
+                <div className="px-8 pb-8">
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Intelligente Formulare</h4>
+                        <ul className="space-y-3 text-gray-600 dark:text-gray-400">
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>Dynamische Felder, die sich an Antworten anpassen</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>Automatische Validierung und Fehlerkorrektur</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>Nahtlose Integration in bestehende Systeme</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Anwendungsbereiche</h4>
+                        <div className="space-y-3">
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <span className="text-blue-800 dark:text-blue-300 font-medium">HR & Onboarding</span>
+                          </div>
+                          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                            <span className="text-green-800 dark:text-green-300 font-medium">Kundenfeedback</span>
+                          </div>
+                          <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                            <span className="text-purple-800 dark:text-purple-300 font-medium">Datenerfassung</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sensors as Eyes Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <button
+                onClick={() => toggleSection('sensors')}
+                className="w-full p-8 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center">
+                      <EyeIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        Sensoren sind die Augen des Systems
+                      </h3>
+                      <p className="text-lg text-gray-600 dark:text-gray-400">
+                        Automatische Erfassung durch Kameras, IoT und digitale Eingänge
+                      </p>
+                    </div>
+                  </div>
+                  {isExpanded('sensors') ? (
+                    <ChevronDownIcon className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <ChevronRightIcon className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+              </button>
+              
+              {isExpanded('sensors') && (
+                <div className="px-8 pb-8">
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Sensor-Technologien</h4>
+                        <ul className="space-y-3 text-gray-600 dark:text-gray-400">
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>Computer Vision für Objekterkennung</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>IoT-Sensoren für Umgebungsdaten</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>Audio-Verarbeitung für Spracheingabe</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Erfassung von</h4>
+                        <div className="space-y-3">
+                          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                            <span className="text-green-800 dark:text-green-300 font-medium">Produktdaten per Foto</span>
+                          </div>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <span className="text-blue-800 dark:text-blue-300 font-medium">Umgebungssensoren</span>
+                          </div>
+                          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                            <span className="text-orange-800 dark:text-orange-300 font-medium">Bewegung & Verhalten</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI as Brain Section */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <button
+                onClick={() => toggleSection('ai')}
+                className="w-full p-8 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center">
+                      <CpuChipIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        KI ist das Gehirn des Systems
+                      </h3>
+                      <p className="text-lg text-gray-600 dark:text-gray-400">
+                        Intelligente Analyse verwandelt Rohdaten in wertvolle Erkenntnisse
+                      </p>
+                    </div>
+                  </div>
+                  {isExpanded('ai') ? (
+                    <ChevronDownIcon className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <ChevronRightIcon className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+              </button>
+              
+              {isExpanded('ai') && (
+                <div className="px-8 pb-8">
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">KI-Fähigkeiten</h4>
+                        <ul className="space-y-3 text-gray-600 dark:text-gray-400">
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                            <span>Automatische Kategorisierung und Tagging</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                            <span>Trend-Erkennung und Vorhersagen</span>
+                          </li>
+                          <li className="flex items-start space-x-3">
+                            <CheckCircleIcon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                            <span>Automatisierte Entscheidungsvorschläge</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Intelligente Ausgaben</h4>
+                        <div className="space-y-3">
+                          <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                            <span className="text-purple-800 dark:text-purple-300 font-medium">Dashboards & Reports</span>
+                          </div>
+                          <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                            <span className="text-indigo-800 dark:text-indigo-300 font-medium">API-Integration</span>
+                          </div>
+                          <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
+                            <span className="text-pink-800 dark:text-pink-300 font-medium">Automatisierte Aktionen</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* How It Works Together */}
+      <div className="py-24 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold text-gray-900 dark:text-white mb-8">
+              So funktioniert es zusammen
+            </h2>
+          </div>
+          
+          <div className="relative">
+            {/* Connection Lines */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-full h-0.5 bg-gradient-to-r from-blue-300 via-green-300 to-purple-300"></div>
+            </div>
+            
+            <div className="relative grid md:grid-cols-3 gap-12">
+              <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl font-bold text-blue-600">1</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Erfassen</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  Formulare und Sensoren sammeln Daten aus der realen Welt – automatisch und kontinuierlich
+                </p>
+              </div>
+              
+              <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl font-bold text-green-600">2</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Verstehen</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  KI analysiert, strukturiert und extrahiert wertvollen Kontext aus allen eingehenden Informationen
+                </p>
+              </div>
+              
+              <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-3xl font-bold text-purple-600">3</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Handeln</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  Intelligente Insights werden zu konkreten Aktionen und Entscheidungen für Ihr Business
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="py-24 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h2 className="text-5xl font-bold text-white mb-8">
+            Die Zukunft beginnt heute
+          </h2>
+          <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Werden Sie Teil der Revolution, die manuelle Dateneingabe für immer verändert. 
+            Schaffen Sie ein System, das sieht, hört und intelligent handelt.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link
+              href="/builder"
+              className="inline-flex items-center justify-center rounded-xl bg-white px-8 py-4 text-lg font-semibold text-blue-600 shadow-lg hover:bg-gray-50 transition-all hover:scale-105"
+            >
+              <RocketLaunchIcon className="mr-3 h-6 w-6" />
+              Formular-Builder testen
+            </Link>
+            <Link
+              href="/erfassung"
+              className="inline-flex items-center justify-center rounded-xl bg-transparent border-2 border-white px-8 py-4 text-lg font-semibold text-white hover:bg-white hover:text-blue-600 transition-all hover:scale-105"
+            >
+              <CameraIcon className="mr-3 h-6 w-6" />
+              Sensor-Erfassung entdecken
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

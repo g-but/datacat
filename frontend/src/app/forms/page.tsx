@@ -3,6 +3,7 @@
 import React from 'react';
 import { SavedForms } from '../components/SavedForms';
 import { FormPreviewModal } from '../components/FormPreviewModal';
+// Header wird global gerendert
 import { useRouter } from 'next/navigation';
 
 interface Form {
@@ -12,6 +13,7 @@ interface Form {
 
 export default function SavedFormsPage() {
   const router = useRouter();
+  // Navigation handled by global header
 
   const [previewForm, setPreviewForm] = React.useState<Form | null>(null);
 
@@ -46,21 +48,24 @@ export default function SavedFormsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <SavedForms
-        forms={[]}
-        loading={false}
-        onLoadForm={handleLoadForm}
-        onDuplicateForm={handleDuplicateForm}
-        onDeleteForm={handleDeleteForm}
-        onPreviewForm={handlePreviewForm}
-        onStatusChange={() => {}}
-      />
-      <FormPreviewModal
-        isOpen={!!previewForm}
-        form={previewForm}
-        onClose={() => setPreviewForm(null)}
-      />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      {/* Global Header */}
+      <div className="flex-1">
+        <SavedForms
+          forms={[]}
+          loading={false}
+          onLoadForm={handleLoadForm}
+          onDuplicateForm={handleDuplicateForm}
+          onDeleteForm={handleDeleteForm}
+          onPreviewForm={handlePreviewForm}
+          onStatusChange={() => {}}
+        />
+        <FormPreviewModal
+          isOpen={!!previewForm}
+          form={previewForm as any}
+          onClose={() => setPreviewForm(null)}
+        />
+      </div>
     </div>
   );
 } 

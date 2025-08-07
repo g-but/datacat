@@ -69,6 +69,7 @@ export function MultiStepFormBuilderStore(props: MultiStepFormBuilderStoreProps)
   return (
     <MultiStepFormBuilder
       {...props}
+      steps={steps}
     />
   );
 } 

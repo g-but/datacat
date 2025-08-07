@@ -23,6 +23,7 @@ interface FormBuilderState {
   duplicateField: (fieldId: string, stepId?: string) => void;
   moveField: (fromIndex: number, toIndex: number) => void;
   addTemplateFields: (template: FieldTemplate, stepId?: string) => void;
+  clearAllFields: () => void;
 
   addStep: (step: Omit<FormStep, 'id'>) => void;
   updateStep: (stepId: string, updates: Partial<FormStep>) => void;
@@ -60,7 +61,7 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
       name: `${(type).toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`,
       label: type,
       placeholder: '',
-      step: stepId,
+      stepId: stepId,
     };
     set(state => {
       const newFormData = { ...state.formData, [newField.name]: '' };
@@ -174,7 +175,7 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
     const newFields = template.fields.map(field => ({
       ...field,
       id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      step: stepId,
+      stepId: stepId,
     }));
     const newFormData = newFields.reduce((acc, f) => ({ ...acc, [f.name]: '' }), state.formData);
     
@@ -221,7 +222,7 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
               step.fields = arrayMove(step.fields, fromFieldIndex, toFieldIndex);
           } else { // Logic for moving between different steps
               const [movedField] = newSteps[fromStepIndex].fields.splice(fromFieldIndex, 1);
-              movedField.step = newSteps[toStepIndex].id;
+              movedField.stepId = newSteps[toStepIndex].id;
               newSteps[toStepIndex].fields.splice(toFieldIndex, 0, movedField);
           }
           return { steps: newSteps };
@@ -266,6 +267,20 @@ export const useFormBuilderStore = create<FormBuilderState>((set, get) => ({
   })),
 
   setCurrentStep: (index) => set({ currentStep: index }),
+
+  // Clear all fields from the form
+  clearAllFields: () => set(state => {
+    if (state.isMultiStep) {
+      return {
+        steps: state.steps.map(step => ({ ...step, fields: [] })),
+        formData: {}
+      };
+    }
+    return {
+      fields: [],
+      formData: {}
+    };
+  }),
 
   // Load a full form template and replace current builder state
   loadTemplate: (template) => set(() => {

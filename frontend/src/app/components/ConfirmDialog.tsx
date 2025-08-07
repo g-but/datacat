@@ -19,15 +19,17 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  if (!isOpen) return null;
-
   React.useEffect(() => {
+    if (!isOpen) return;
+    
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onCancel]);
+  }, [isOpen, onCancel]);
+
+  if (!isOpen) return null;
 
   return (
     <div

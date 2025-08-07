@@ -14,7 +14,7 @@ interface BaseFieldProps {
 }
 
 type FormFieldProps = BaseFieldProps & {
-  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio';
+  type: 'text' | 'email' | 'tel' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'number' | 'range' | 'file' | 'url' | 'password';
   value: string;
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -22,6 +22,11 @@ type FormFieldProps = BaseFieldProps & {
   placeholder?: string;
   rows?: number;
   options?: { value: string; label: string }[];
+  min?: number;
+  max?: number;
+  stepSize?: number;
+  accept?: string;
+  multiple?: boolean;
 };
 
 const baseInputClasses = "w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 dark:bg-gray-700/50 dark:text-white transition-all duration-200 backdrop-blur-sm";
@@ -139,6 +144,78 @@ export function FormField(props: FormFieldProps) {
           </div>
         );
       }
+
+      case 'number':
+        return (
+          <input
+            type="number"
+            id={id}
+            name={name}
+            value={props.value}
+            onChange={props.onChange}
+            onBlur={onBlur}
+            placeholder={props.placeholder}
+            min={props.min}
+            max={props.max}
+            required={required}
+            className={`${getInputClasses(hasError)} ${className}`}
+          />
+        );
+
+      case 'range':
+        return (
+          <div className="space-y-2">
+            <input
+              type="range"
+              id={id}
+              name={name}
+              value={props.value || props.min || 0}
+              onChange={props.onChange}
+              onBlur={onBlur}
+              min={props.min || 0}
+              max={props.max || 100}
+              step={props.stepSize || 1}
+              required={required}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+            />
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>{props.min || 0}</span>
+              <span className="font-medium">{props.value || props.min || 0}</span>
+              <span>{props.max || 100}</span>
+            </div>
+          </div>
+        );
+
+      case 'file':
+        return (
+          <input
+            type="file"
+            id={id}
+            name={name}
+            onChange={props.onChange}
+            onBlur={onBlur}
+            accept={props.accept}
+            multiple={props.multiple}
+            required={required}
+            className={`${getInputClasses(hasError)} ${className} file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100`}
+          />
+        );
+
+      case 'url':
+      case 'password':
+        return (
+          <input
+            type={props.type}
+            id={id}
+            name={name}
+            value={props.value}
+            onChange={props.onChange}
+            onBlur={onBlur}
+            placeholder={props.placeholder}
+            required={required}
+            className={`${getInputClasses(hasError)} ${className}`}
+          />
+        );
       
       default:
         return null;

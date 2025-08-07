@@ -6,6 +6,7 @@ import { EmptyStep } from './EmptyStep';
 import { useFormBuilderStore } from '../hooks/useFormBuilderStore';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { fieldTemplates } from '../data/fieldTemplates';
 
 export interface ModernFieldBuilderProps {
   field: FieldConfig;
@@ -14,6 +15,8 @@ export interface ModernFieldBuilderProps {
   onUpdateField: (updates: Partial<FieldConfig>) => void;
   onRemoveField: () => void;
   onDuplicateField: () => void;
+  onSelect: () => void; // Add this
+  isSelected: boolean; // Add this
   error?: string | null;
 }
 
@@ -24,6 +27,8 @@ export function ModernFieldBuilder({
   onUpdateField,
   onRemoveField,
   onDuplicateField,
+  onSelect, // Add this
+  isSelected, // Add this
   error,
 }: ModernFieldBuilderProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -126,7 +131,44 @@ export function ModernFieldBuilder({
             { value: 'option1', label: 'Option 1' },
             { value: 'option2', label: 'Option 2' },
         ],
-      }
+      },
+      number: {
+        label: 'Zahl',
+        placeholder: '0',
+        options: undefined,
+        rows: undefined,
+        min: 0,
+        max: 100,
+      },
+      range: {
+        label: 'Bereich',
+        placeholder: undefined,
+        options: undefined,
+        rows: undefined,
+        min: 0,
+        max: 100,
+        stepSize: 1,
+      },
+      file: {
+        label: 'Datei',
+        placeholder: undefined,
+        options: undefined,
+        rows: undefined,
+        accept: '*/*',
+        multiple: false,
+      },
+      url: {
+        label: 'URL',
+        placeholder: 'https://beispiel.de',
+        options: undefined,
+        rows: undefined,
+      },
+      password: {
+        label: 'Passwort',
+        placeholder: 'Passwort eingeben...',
+        options: undefined,
+        rows: undefined,
+      },
     };
 
     const defaults = fieldDefaults[newType];
@@ -139,6 +181,11 @@ export function ModernFieldBuilder({
       placeholder: defaults.placeholder,
       options: defaults.options,
       rows: defaults.rows,
+      min: defaults.min,
+      max: defaults.max,
+      stepSize: defaults.stepSize,
+      accept: defaults.accept,
+      multiple: defaults.multiple,
     });
   };
 
@@ -150,12 +197,22 @@ export function ModernFieldBuilder({
     select: 'Auswahl',
     textarea: 'Textbereich',
     checkbox: 'Checkbox',
-    radio: 'Radio'
+    radio: 'Radio',
+    number: 'Zahl',
+    range: 'Bereich',
+    file: 'Datei',
+    url: 'URL',
+    password: 'Passwort'
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`group relative bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 ${
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      onClick={onSelect}
+      className={`group relative bg-white dark:bg-gray-800 rounded-lg border-2 transition-all duration-200 ${
       isDragging ? 'border-blue-500 shadow-lg scale-105' : 
+      isSelected ? 'border-blue-500 shadow-md' :
       error ? 'border-red-300 dark:border-red-600' : 
       'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
     } ${isEditing ? 'border-blue-500 shadow-lg' : ''}`}>
@@ -325,6 +382,67 @@ export function ModernFieldBuilder({
             </div>
           )}
 
+          {field.type === 'number' && (
+            <input
+              type="number"
+              value={value}
+              onChange={onChange}
+              placeholder={field.placeholder || '0'}
+              min={field.min}
+              max={field.max}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          )}
+
+          {field.type === 'range' && (
+            <div className="space-y-2">
+              <input
+                type="range"
+                value={value || field.min || 0}
+                onChange={onChange}
+                min={field.min || 0}
+                max={field.max || 100}
+                step={field.stepSize || 1}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+              />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>{field.min || 0}</span>
+                <span className="font-medium">{value || field.min || 0}</span>
+                <span>{field.max || 100}</span>
+              </div>
+            </div>
+          )}
+
+          {field.type === 'file' && (
+            <input
+              type="file"
+              onChange={onChange}
+              accept={field.accept}
+              multiple={field.multiple}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          )}
+
+          {field.type === 'url' && (
+            <input
+              type="url"
+              value={value}
+              onChange={onChange}
+              placeholder={field.placeholder || 'https://beispiel.de'}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          )}
+
+          {field.type === 'password' && (
+            <input
+              type="password"
+              value={value}
+              onChange={onChange}
+              placeholder={field.placeholder || 'Passwort eingeben...'}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+          )}
+
           {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         </div>
 
@@ -406,8 +524,10 @@ interface ModernFormBuilderProps {
   formData: Record<string, string>;
   onFieldChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   onUpdateField: (id: string, updates: Partial<FieldConfig>) => void;
-  onRemoveField: (id: string) => void;
+  onRemoveField: (id:string) => void;
   onDuplicateField: (id: string) => void;
+  onSelectField: (id: string) => void; // Add this
+  selectedFieldId?: string; // Add this
   errors: Record<string, string | null>;
 }
 
@@ -418,9 +538,11 @@ export function ModernFormBuilder({
   onUpdateField,
   onRemoveField,
   onDuplicateField,
+  onSelectField, // Add this
+  selectedFieldId, // Add this
   errors,
 }: ModernFormBuilderProps) {
-  const { addField, addTemplateFields } = useFormBuilderStore();
+  const { addField, addTemplateFields, clearAllFields } = useFormBuilderStore();
 
   if (fields.length === 0) {
     return (
@@ -443,9 +565,37 @@ export function ModernFormBuilder({
               onUpdateField={(updates) => onUpdateField(field.id, updates)}
               onRemoveField={() => onRemoveField(field.id)}
               onDuplicateField={() => onDuplicateField(field.id)}
+              onSelect={() => onSelectField(field.id)} // Add this
+              isSelected={selectedFieldId === field.id} // Add this
               error={errors[field.name]}
             />
         ))}
+        {/* inline add placeholder */}
+        <div className="flex items-center justify-center py-6">
+          <div className="flex gap-4">
+            <button
+              onClick={() => addField('text')}
+              className="flex items-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              title="Feld hinzufügen"
+            >
+              ＋ Feld
+            </button>
+            <button
+              onClick={() => addTemplateFields(fieldTemplates[0])}
+              className="flex items-center px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              title="Sektion hinzufügen"
+            >
+              ＋ Sektion
+            </button>
+            <button
+              onClick={clearAllFields}
+              className="flex items-center px-4 py-2 border-2 border-dashed border-red-300 dark:border-red-600 rounded-lg text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400"
+              title="Alle Felder löschen"
+            >
+              🗑 Alle löschen
+            </button>
+          </div>
+        </div>
       </div>
     </SortableContext>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FieldTemplate, FieldConfig } from '../types/form';
+import { FieldTemplate, FieldConfig, FormStep } from '../types/form';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Button } from './Button';
@@ -12,27 +12,37 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { fieldTemplates } from '../data/fieldTemplates';
 
 interface MultiStepFormBuilderProps {
+  steps: FormStep[];
   stepsWithErrors: Set<string>;
   errors: Record<string, string | null>;
+  formData: Record<string, string>;
+  onFieldChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+  onUpdateField: (id: string, updates: Partial<FieldConfig>) => void;
+  onRemoveField: (id: string) => void;
+  onDuplicateField: (id: string) => void;
+  onSelectField: (id: string) => void;
+  selectedFieldId?: string;
 }
 
 export function MultiStepFormBuilder({
+  steps,
   stepsWithErrors,
-  errors
+  errors,
+  formData,
+  onFieldChange,
+  onUpdateField,
+  onRemoveField,
+  onDuplicateField,
+  onSelectField,
+  selectedFieldId,
 }: MultiStepFormBuilderProps) {
   const {
-    steps,
     currentStep,
-    formData,
     setCurrentStep,
-    setFormData,
     addStep,
     addField,
     addTemplateFields,
-    updateField,
-    duplicateField,
-    removeField,
-    removeStep
+    removeStep,
   } = useFormBuilderStore();
 
   const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null);
@@ -64,7 +74,7 @@ export function MultiStepFormBuilder({
     return requiredFields.every(field => formData[field.name]?.trim());
   }, [currentStepData, formData]);
   
-  if (!currentStepData) {
+  if (!steps || steps.length === 0 || !currentStepData) {
     return (
       <div className="flex items-center justify-center py-24">
         <button
@@ -167,10 +177,12 @@ export function MultiStepFormBuilder({
                       key={field.id}
                       field={field}
                       value={formData[field.name] || ''}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setFormData(e.target.name, e.target.value)}
-                      onUpdateField={(updates) => updateField(field.id, updates)}
-                      onRemoveField={() => removeField(field.id)}
-                      onDuplicateField={() => duplicateField(field.id)}
+                      onChange={onFieldChange}
+                      onUpdateField={(updates) => onUpdateField(field.id, updates)}
+                      onRemoveField={() => onRemoveField(field.id)}
+                      onDuplicateField={() => onDuplicateField(field.id)}
+                      onSelect={() => onSelectField(field.id)}
+                      isSelected={selectedFieldId === field.id}
                       error={errors[field.name]}
                     />
                 ))}
