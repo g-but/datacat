@@ -1,11 +1,11 @@
-# Gemini Project: Kivi-HR
+# Gemini Project: Universal Form Builder
 ---
 created_date: 2024-07-08
 last_modified_date: 2025-07-08
 last_modified_summary: "Added documentation metadata block."
 ---
 
-This document provides the essential context for the Kivi-HR project.
+This document provides the essential context for the Universal Form Builder project.
 
 ## 1. Mission
 

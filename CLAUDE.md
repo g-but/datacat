@@ -1,17 +1,23 @@
-# CLAUDE.md - AI Assistant Context for Kivi-HR
+# CLAUDE.md - AI Assistant Context for Erfassung Platform
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-08
-last_modified_summary: "Added documentation metadata block."
+last_modified_date: 2025-07-29
+last_modified_summary: "Updated to reflect unified Erfassung concept - bringing everything into the system through forms and product cataloging."
 ---
 
 ## Project Overview
-Kivi-HR is an AI-ready intake system framework, starting with an HR use case. It's a modular form builder and data pipeline that will eventually integrate with LLMs for intelligent task matching, skill analysis, and hiring guidance.
+**Erfassung Platform** is a universal AI-powered system for putting things "into the system." We provide two unified pathways:
+
+1. **Form-based Erfassung** (Menschen erfassen): Create intelligent forms, share them, collect responses that are automatically analyzed and structured
+2. **Product Erfassung** (Produkte erfassen): Take photos of products, AI extracts data, structures it into tables, and syncs with e-commerce/inventory systems
+
+All captured data flows into a central database for export, LLM analysis, business intelligence, and system integration. The core concept is **Erfassung** - the German word for "capturing/recording" something into a system.
 
 ## Current Status
-- **Phase 1**: Frontend MVP (Next.js + Tailwind CSS)
-- **Active Development**: Building beautiful, dynamic HR intake forms
-- **Next Phases**: Backend integration, AI/LLM integration
+- **Phase 1**: Frontend MVP (Next.js + Tailwind CSS) - ✅ Complete
+- **Phase 2**: Production backend architecture planning
+- **Active Development**: Form sharing system and LLM response analysis
+- **Next Phases**: Multi-user collaboration, real-time form responses, AI-powered insights
 
 ## Tech Stack
 
@@ -23,11 +29,15 @@ Kivi-HR is an AI-ready intake system framework, starting with an HR use case. It
 - **Fonts**: Geist Sans & Geist Mono
 - **Planned**: React Hook Form/Formik, Zod/Yup validation, Framer Motion
 
-### Future Stack (Planned)
-- **Backend**: Node.js + Express
-- **Database**: PostgreSQL (via Supabase)
-- **Auth**: Clerk or Supabase Auth
-- **AI Integration**: OpenAI GPT-4/Gemini
+### Production Stack (In Development)
+- **Backend**: tRPC + Prisma ORM
+- **Database**: PostgreSQL with connection pooling
+- **Auth**: NextAuth.js v5 with multiple providers
+- **Real-time**: WebSockets for live collaboration
+- **Queue System**: Background job processing
+- **AI Integration**: OpenAI GPT-4/Gemini for response analysis
+- **Form Sharing**: Public/private links with access controls
+- **Response Collection**: Multi-user submission handling
 
 ## Project Structure
 ```

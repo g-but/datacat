@@ -1,0 +1,322 @@
+// Formular Production Database Schema
+// Enhanced schema for form sharing, user management, and LLM analysis
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core user management
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?   // Optional for OAuth users
+  name            String?
+  avatar          String?
+  emailVerified   DateTime?
+  role            UserRole  @default(USER)
+  organizationId  String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  forms           Form[]
+  submissions     Submission[]
+  sharedForms     FormCollaborator[]
+  analysisHistory LLMAnalysis[]
+  accounts        Account[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?
+  settings    Json     @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  forms       Form[]
+
+  @@map("organizations")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Core form system
+model Form {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  schema          Json          // Form field definitions and validation
+  settings        Json          @default("{}")
+  isPublished     Boolean       @default(false)
+  isTemplate      Boolean       @default(false)
+  templateTags    String[]      @default([])
+  userId          String
+  organizationId  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Form sharing and access control
+  shareSettings   ShareSettings?
+  sharedLinks     SharedLink[]
+  collaborators   FormCollaborator[]
+
+  // Data collection
+  submissions     Submission[]
+  analysisResults LLMAnalysis[]
+
+  // Audit and versioning
+  versions        FormVersion[]
+  currentVersion  Int           @default(1)
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+
+  @@map("forms")
+}
+
+model ShareSettings {
+  id                    String      @id @default(cuid())
+  formId                String      @unique
+  accessType            AccessType  @default(PRIVATE)
+  requireAuth           Boolean     @default(false)
+  allowAnonymous        Boolean     @default(true)
+  collectEmails         Boolean     @default(false)
+  allowMultipleSubmissions Boolean  @default(false)
+  notificationSettings  Json        @default("{}")
+  
+  form                  Form        @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@map("share_settings")
+}
+
+model SharedLink {
+  id                String      @id @default(cuid())
+  formId            String
+  slug              String      @unique
+  accessType        AccessType  @default(PUBLIC)
+  requiresAuth      Boolean     @default(false)
+  expiresAt         DateTime?
+  maxSubmissions    Int?
+  currentSubmissions Int        @default(0)
+  allowedDomains    String[]    @default([])
+  password          String?
+  metadata          Json        @default("{}")
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  form              Form        @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@map("shared_links")
+}
+
+model FormCollaborator {
+  id          String         @id @default(cuid())
+  formId      String
+  userId      String
+  role        CollaboratorRole @default(VIEWER)
+  permissions Json           @default("{}")
+  invitedAt   DateTime       @default(now())
+  acceptedAt  DateTime?
+
+  form        Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, userId])
+  @@map("form_collaborators")
+}
+
+model FormVersion {
+  id          String   @id @default(cuid())
+  formId      String
+  version     Int
+  schema      Json
+  settings    Json     @default("{}")
+  changelog   String?
+  createdAt   DateTime @default(now())
+  createdBy   String
+
+  form        Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, version])
+  @@map("form_versions")
+}
+
+// Data collection and submissions
+model Submission {
+  id              String          @id @default(cuid())
+  formId          String
+  submitterId     String?         // Optional - can be anonymous
+  data            Json
+  metadata        Json            @default("{}")
+  status          SubmissionStatus @default(PENDING)
+  source          SubmissionSource @default(DIRECT)
+  ipAddress       String?
+  userAgent       String?
+  submittedAt     DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // LLM Analysis
+  analyses        LLMAnalysis[]
+  
+  // Relations
+  form            Form            @relation(fields: [formId], references: [id], onDelete: Cascade)
+  submitter       User?           @relation(fields: [submitterId], references: [id])
+
+  @@map("submissions")
+}
+
+// LLM Analysis System
+model LLMAnalysis {
+  id              String          @id @default(cuid())
+  submissionId    String?         // Can analyze forms or submissions
+  formId          String?
+  analysisType    AnalysisType
+  prompt          String
+  result          Json
+  confidence      Float?
+  processingTime  Int?            // milliseconds
+  model           String          // e.g., "gpt-4", "claude-3"
+  version         String          @default("1.0")
+  status          AnalysisStatus  @default(PENDING)
+  error           String?
+  userId          String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  submission      Submission?     @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  form            Form?           @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("llm_analyses")
+}
+
+// Background job system
+model BackgroundJob {
+  id          String     @id @default(cuid())
+  type        JobType
+  status      JobStatus  @default(PENDING)
+  data        Json
+  result      Json?
+  error       String?
+  priority    Int        @default(0)
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(3)
+  scheduledAt DateTime   @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("background_jobs")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AccessType {
+  PRIVATE
+  RESTRICTED
+  PUBLIC
+}
+
+enum CollaboratorRole {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+enum SubmissionStatus {
+  PENDING
+  PROCESSED
+  ARCHIVED
+  DELETED
+}
+
+enum SubmissionSource {
+  DIRECT
+  SHARED_LINK
+  EMBED
+  API
+}
+
+enum AnalysisType {
+  SENTIMENT
+  CLASSIFICATION
+  EXTRACTION
+  SUMMARY
+  CUSTOM
+}
+
+enum AnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum JobType {
+  LLM_ANALYSIS
+  EMAIL_NOTIFICATION
+  DATA_EXPORT
+  FORM_BACKUP
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}

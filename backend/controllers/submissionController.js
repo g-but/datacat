@@ -1,82 +1,210 @@
-const db = require('../db');
+const prisma = require('../lib/prisma');
 
 exports.createSubmission = async (req, res) => {
-  const { form_id, data } = req.body;
-
-  if (!form_id || !data) {
-    return res.status(400).json({ msg: 'Form ID and data are required' });
-  }
+  const { formId, data, metadata } = req.body;
+  const submitterId = req.user?.id || null; // Can be anonymous
 
   try {
-    // First, find the owner of the form
-    const form = await db.query('SELECT user_id FROM forms WHERE id = $1', [form_id]);
-    if (form.rows.length === 0) {
-      return res.status(404).json({ msg: 'Form not found' });
+    // Validate input
+    if (!formId || !data) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Form ID and data are required' 
+      });
     }
-    const userId = form.rows[0].user_id;
 
-    // Now, create the submission
-    const newSubmission = await db.query(
-      `INSERT INTO submissions (form_id, user_id, data)
-       VALUES ($1, $2, $3)
-       RETURNING id`,
-      [form_id, userId, data]
-    );
+    // Check if form exists and is published
+    const form = await prisma.form.findFirst({
+      where: {
+        id: formId,
+        isPublished: true
+      },
+      select: {
+        id: true,
+        title: true,
+        userId: true,
+        settings: true
+      }
+    });
+
+    if (!form) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Form not found or not published' 
+      });
+    }
+
+    // Create submission
+    const submission = await prisma.submission.create({
+      data: {
+        formId,
+        submitterId,
+        data,
+        metadata: metadata || {},
+        status: 'PENDING',
+        source: 'DIRECT',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent')
+      },
+      select: {
+        id: true,
+        formId: true,
+        data: true,
+        status: true,
+        submittedAt: true
+      }
+    });
 
     res.status(201).json({ 
-      msg: 'Submission received successfully', 
-      submissionId: newSubmission.rows[0].id 
+      success: true, 
+      message: 'Form submitted successfully',
+      submission 
     });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Submit form error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error submitting form' 
+    });
   }
-}; 
+};
 
-exports.getFormSubmissions = async (req, res) => {
-  const { form_id } = req.params;
-  const { search, startDate, endDate } = req.query; // Get filter query params
+exports.getSubmissions = async (req, res) => {
+  const { formId } = req.params;
+  const userId = req.user.id;
+  const { page = 1, limit = 20, status, search } = req.query;
+
+  try {
+    // Check if user owns the form
+    const form = await prisma.form.findFirst({
+      where: {
+        id: formId,
+        userId
+      },
+      select: {
+        id: true,
+        title: true
+      }
+    });
+
+    if (!form) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Form not found or you do not have access' 
+      });
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const where = {
+      formId
+    };
+
+    if (status) {
+      where.status = status.toUpperCase();
+    }
+
+    const [submissions, total] = await Promise.all([
+      prisma.submission.findMany({
+        where,
+        select: {
+          id: true,
+          data: true,
+          metadata: true,
+          status: true,
+          source: true,
+          submittedAt: true,
+          submitter: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: {
+          submittedAt: 'desc'
+        },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.submission.count({ where })
+    ]);
+
+    res.json({ 
+      success: true,
+      form,
+      submissions,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (err) {
+    console.error('Get submissions error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error getting submissions' 
+    });
+  }
+};
+
+exports.getSubmission = async (req, res) => {
+  const { id } = req.params;
   const userId = req.user.id;
 
   try {
-    // First, verify the user owns the form
-    const form = await db.query('SELECT user_id FROM forms WHERE id = $1', [form_id]);
-    if (form.rows.length === 0) {
-      return res.status(404).json({ msg: 'Form not found' });
+    const submission = await prisma.submission.findFirst({
+      where: {
+        id,
+        form: {
+          userId
+        }
+      },
+      select: {
+        id: true,
+        data: true,
+        metadata: true,
+        status: true,
+        source: true,
+        ipAddress: true,
+        userAgent: true,
+        submittedAt: true,
+        submitter: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        form: {
+          select: {
+            id: true,
+            title: true,
+            schema: true
+          }
+        }
+      }
+    });
+
+    if (!submission) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Submission not found or you do not have access' 
+      });
     }
-    if (form.rows[0].user_id.toString() !== userId) {
-      return res.status(401).json({ msg: 'User not authorized to view these submissions' });
-    }
 
-    let query = 'SELECT id, data, submitted_at FROM submissions WHERE form_id = $1';
-    const params = [form_id];
-    let paramIndex = 2;
-
-    if (search) {
-      // This is a simple text search across the JSONB data column.
-      // It's not the most performant for very large datasets, but great for a start.
-      // For performance, a dedicated search index (like GIN) on the `data` column would be needed.
-      query += ` AND data::text ILIKE $${paramIndex++}`;
-      params.push(`%${search}%`);
-    }
-
-    if (startDate) {
-      query += ` AND submitted_at >= $${paramIndex++}`;
-      params.push(startDate);
-    }
-    
-    if (endDate) {
-      query += ` AND submitted_at <= $${paramIndex++}`;
-      params.push(endDate);
-    }
-
-    query += ' ORDER BY submitted_at DESC';
-
-    const submissions = await db.query(query, params);
-
-    res.json(submissions.rows);
+    res.json({ 
+      success: true, 
+      submission 
+    });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Get submission error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error getting submission' 
+    });
   }
-}; 
+};

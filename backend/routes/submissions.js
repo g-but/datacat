@@ -8,9 +8,14 @@ const auth = require('../middleware/auth');
 // @access  Public
 router.post('/', submissionController.createSubmission);
 
-// @route   GET api/submissions/:form_id
+// @route   GET api/submissions/form/:formId
 // @desc    Get all submissions for a specific form
 // @access  Private
-router.get('/:form_id', auth, submissionController.getFormSubmissions);
+router.get('/form/:formId', auth, submissionController.getSubmissions);
+
+// @route   GET api/submissions/:id
+// @desc    Get a single submission
+// @access  Private
+router.get('/:id', auth, submissionController.getSubmission);
 
 module.exports = router; 

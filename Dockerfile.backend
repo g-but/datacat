@@ -1,0 +1,43 @@
+# Backend Development Dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    curl \
+    bash
+
+# Copy package files
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+
+# Install dependencies
+RUN npm ci
+RUN cd backend && npm ci
+
+# Copy backend source
+COPY backend ./backend
+
+# Generate Prisma client
+WORKDIR /app/backend
+RUN npx prisma generate
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Change ownership
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
+# Expose port
+EXPOSE 5001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:5001/health || exit 1
+
+# Start backend in development mode
+CMD ["npm", "run", "dev"] 

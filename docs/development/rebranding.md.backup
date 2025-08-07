@@ -1,0 +1,214 @@
+# Rebranding Guide
+---
+created_date: 2025-07-13
+last_modified_date: 2025-07-13
+last_modified_summary: "Initial creation of rebranding documentation."
+---
+
+## Overview
+
+The Universal Form Builder is designed with a **configuration-driven branding system** that allows you to rebrand the entire application with minimal code changes. This system separates branding from core functionality, making it easy to create different versions for different markets or clients.
+
+## Quick Start
+
+### Using Presets
+
+Apply a predefined branding preset:
+
+```bash
+# Apply HR branding
+./scripts/dev/rebrand.sh hr
+
+# Apply medical branding  
+./scripts/dev/rebrand.sh medical
+
+# Apply legal branding
+./scripts/dev/rebrand.sh legal
+
+# Apply government branding
+./scripts/dev/rebrand.sh government
+
+# Apply generic branding
+./scripts/dev/rebrand.sh generic
+```
+
+### Custom Branding
+
+Apply custom branding with your own brand name and use case:
+
+```bash
+# Custom branding
+./scripts/dev/rebrand.sh custom "MyApp" "HR Intake"
+
+# Custom branding with different use case
+./scripts/dev/rebrand.sh custom "PatientFlow" "Medical Intake"
+```
+
+## How It Works
+
+### 1. Environment-Based Configuration
+
+Branding is controlled through environment variables in `frontend/.env.local`:
+
+```env
+# Brand Identity
+NEXT_PUBLIC_BRAND_NAME="Your Brand Name"
+NEXT_PUBLIC_BRAND_SHORT_NAME="ShortName"
+NEXT_PUBLIC_BRAND_DESCRIPTION="Your description"
+
+# Brand Colors
+NEXT_PUBLIC_BRAND_PRIMARY_COLOR="#3B82F6"
+NEXT_PUBLIC_BRAND_SECONDARY_COLOR="#1F2937"
+NEXT_PUBLIC_BRAND_ACCENT_COLOR="#10B981"
+
+# Use Case & Domain
+NEXT_PUBLIC_BRAND_USE_CASE="Your Use Case"
+NEXT_PUBLIC_BRAND_DOMAIN="yourdomain.com"
+```
+
+### 2. Preset System
+
+Predefined branding configurations for common use cases:
+
+- **HR**: TalentFlow HR - Blue theme for HR/talent management
+- **Medical**: HealthIntake Pro - Red theme for healthcare
+- **Legal**: LegalIntake Suite - Purple theme for legal services
+- **Government**: CitizenConnect - Green theme for public sector
+- **Generic**: Universal Form Builder - Default blue theme
+
+### 3. React Hooks
+
+Use the branding hooks in your components:
+
+```tsx
+import { useBrandName, useBrandColors, useBrandUseCase } from '../hooks/useBranding';
+
+function Header() {
+  const brandName = useBrandName();
+  const colors = useBrandColors();
+  const useCase = useBrandUseCase();
+  
+  return (
+    <header style={{ backgroundColor: colors.primary }}>
+      <h1>{brandName}</h1>
+      <p>{useCase}</p>
+    </header>
+  );
+}
+```
+
+## Available Branding Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | string | Full brand name |
+| `shortName` | string | Short brand name |
+| `description` | string | Brand description |
+| `logo` | string | Path to logo file |
+| `favicon` | string | Path to favicon |
+| `primaryColor` | string | Primary brand color (hex) |
+| `secondaryColor` | string | Secondary brand color (hex) |
+| `accentColor` | string | Accent brand color (hex) |
+| `theme` | 'light' \| 'dark' \| 'auto' | UI theme preference |
+| `useCase` | string | Primary use case |
+| `domain` | string | Brand domain |
+
+## Best Practices
+
+### 1. Use Environment Variables
+
+Always use environment variables for branding configuration. Never hardcode brand values in components.
+
+### 2. Leverage Presets
+
+Use presets for common use cases and only create custom branding when necessary.
+
+### 3. Test Across Presets
+
+When developing new features, test them across different branding presets to ensure they work well with different color schemes and use cases.
+
+### 4. Maintain Consistency
+
+Ensure that all components use the branding system consistently. Don't mix hardcoded values with branded values.
+
+## Advanced Customization
+
+### Custom Color Schemes
+
+Create custom color schemes by setting environment variables:
+
+```env
+NEXT_PUBLIC_BRAND_PRIMARY_COLOR="#FF6B6B"
+NEXT_PUBLIC_BRAND_SECONDARY_COLOR="#4ECDC4"
+NEXT_PUBLIC_BRAND_ACCENT_COLOR="#45B7D1"
+```
+
+### Custom Assets
+
+Replace brand assets by updating the paths:
+
+```env
+NEXT_PUBLIC_BRAND_LOGO="/custom-logo.svg"
+NEXT_PUBLIC_BRAND_FAVICON="/custom-favicon.ico"
+```
+
+### Adding New Presets
+
+To add a new preset, edit `frontend/src/config/branding-presets.ts`:
+
+```typescript
+export const brandingPresets: Record<string, Partial<BrandingConfig>> = {
+  // ... existing presets ...
+  
+  // New preset
+  education: {
+    name: 'EduIntake',
+    shortName: 'EduIntake',
+    description: 'Student Intake & Educational Data Collection',
+    primaryColor: '#8B5CF6', // Purple
+    secondaryColor: '#1F2937', // Gray
+    accentColor: '#F59E0B', // Amber
+    useCase: 'Education Intake',
+    domain: 'eduintake.com'
+  }
+};
+```
+
+## Troubleshooting
+
+### Changes Not Appearing
+
+1. Ensure you've restarted the development server after applying branding changes
+2. Check that `.env.local` exists in the frontend directory
+3. Verify environment variable names are correct (must start with `NEXT_PUBLIC_`)
+
+### Preset Not Working
+
+1. Check that the preset name is spelled correctly
+2. Ensure the preset exists in `branding-presets.ts`
+3. Verify the rebrand script has execute permissions
+
+### Custom Branding Issues
+
+1. Check that all required environment variables are set
+2. Ensure string values are properly quoted in `.env.local`
+3. Verify color values are valid hex codes
+
+## Migration from Hardcoded Branding
+
+If you have existing hardcoded branding in your components:
+
+1. Replace hardcoded values with branding hooks
+2. Update component imports to use the branding system
+3. Test across different presets
+4. Remove any remaining hardcoded brand references
+
+Example migration:
+
+```tsx
+// Before
+const brandName = "Kivi HR";
+
+// After
+const brandName = useBrandName();
+``` 
