@@ -18,7 +18,7 @@
     "@mdx-js/react": "^3.0.0",
     "@types/react-datepicker": "^6.2.0",
     "contentlayer": "^0.3.1",
-    "next": "15.3.5",
+    "next": "15.5.4",
     "next-contentlayer": "^0.3.1",
     "react": "^19.0.0",
     "react-datepicker": "^8.4.0",
