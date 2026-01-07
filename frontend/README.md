@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DataCat Frontend
+
+This is the Next.js frontend for DataCat, a universal AI-powered data capture system.
 
 ## Getting Started
 
@@ -37,8 +39,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-09
-last_modified_summary: "Enabled drag-and-drop of fields between steps in sidebar; unified DnD context; updated UI documentation sections."
+last_modified_date: 2025-08-12
+last_modified_summary: "Updated to reflect DataCat rebranding and current frontend features."
 
 ---
 

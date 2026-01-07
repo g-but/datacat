@@ -1,4 +1,5 @@
 import { FieldConfig } from '../types/form';
+import { openaiVisionService } from './openaiVisionService';
 
 export interface VisionAnalysisResult {
   success: boolean;
@@ -74,6 +75,15 @@ class VisionService {
     file: File, 
     onProgress?: (progress: VisionAnalysisProgress) => void
   ): Promise<VisionAnalysisResult> {
+    // Try OpenAI first if available
+    if (openaiVisionService.isAvailable()) {
+      try {
+        return await openaiVisionService.analyzeImage(file, onProgress);
+      } catch (error) {
+        console.warn('OpenAI Vision failed, falling back to mock:', error);
+        // Fall through to mock implementation
+      }
+    }
     try {
       // Stage 1: Uploading
       onProgress?.({
@@ -146,6 +156,15 @@ class VisionService {
     file: File,
     onProgress?: (progress: VisionAnalysisProgress) => void
   ): Promise<VisionAnalysisResult> {
+    // Try OpenAI first if available
+    if (openaiVisionService.isAvailable()) {
+      try {
+        return await openaiVisionService.analyzePDF(file, onProgress);
+      } catch (error) {
+        console.warn('OpenAI Vision failed, falling back to mock:', error);
+        // Fall through to mock implementation
+      }
+    }
     try {
       // Similar process but with PDF-specific messages
       onProgress?.({

@@ -16,11 +16,11 @@ export default function ErfassungPage() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Erfassung
+            Produkt-Scan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
-            Transformieren Sie Produktfotos in strukturierte Datentabellen mit KI-gestützter Analyse. 
-            Automatisieren Sie den kompletten Workflow von der Fotografie bis zur Online-Shop-Integration.
+            Transformieren Sie Produktfotos in strukturierte Produktkataloge mit KI-gestützter Analyse.
+            Automatisieren Sie den kompletten Workflow von der Fotografie bis zur E-Commerce-Integration.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -28,7 +28,7 @@ export default function ErfassungPage() {
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
             >
               <CameraIcon className="h-5 w-5 mr-2" />
-              Neues Produkt erfassen
+              Produkt scannen
             </Link>
             <Link
               href="/erfassung/table"
@@ -171,7 +171,7 @@ export default function ErfassungPage() {
             className="inline-flex items-center px-8 py-3 border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
           >
             <CameraIcon className="h-6 w-6 mr-3" />
-            Erstes Produkt erfassen
+            Erstes Produkt scannen
             <ArrowRightIcon className="h-5 w-5 ml-2" />
           </Link>
         </div>

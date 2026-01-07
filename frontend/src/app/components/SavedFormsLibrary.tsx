@@ -67,7 +67,7 @@ export function SavedFormsLibrary({
     
     try {
       setLoading(true);
-      const res = await fetch('/api/forms', { headers: { 'x-auth-token': token } });
+      const res = await fetch('/api/v1/forms', { headers: { 'x-auth-token': token } });
       if (!res.ok) throw new Error('Failed to fetch forms');
       const data = await res.json();
       const parsedData = data.map((form: any): SavedForm => ({

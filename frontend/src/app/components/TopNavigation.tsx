@@ -66,15 +66,24 @@ export function TopNavigation({
 }: TopNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { token, user, logout, loading } = useAuth(); // Use the auth context
+  const displayName = (user?.name && user.name.trim()) || user?.email || '';
+  const displayInitial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
   const brandName = useBrandName();
 
   const [isMegaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [isFormSubmenuOpen, setFormSubmenuOpen] = useState(false);
 
+  // Two solutions: 1) Form tool (with Library + Saved), 2) Photo inventory
   const primaryLinks: NavItem[] = [
-    { name: 'Formular Builder', href: '/builder', description: 'Erstellen und bearbeiten Sie Ihre Formulare.', icon: DocumentChartBarIcon },
-    { name: 'Vorlagen-Bibliothek', href: '/templates', description: 'Starten Sie mit einer vorgefertigten Vorlage.', icon: DocumentDuplicateIcon },
-    { name: 'Gespeicherte Formulare', href: '/forms', description: 'Verwalten Sie Ihre gespeicherten Formulare.', icon: FolderIcon },
-    { name: 'Erfassung', href: '/erfassung', description: 'KI-gestützte Produktkatalogisierung mit Fotoscan.', icon: CameraIcon },
+    { name: 'Form-Tool', href: '/builder', description: 'Builder, Bibliothek & Gespeicherte unter einem Dach.', icon: DocumentChartBarIcon },
+    { name: 'Foto-Inventar', href: '/erfassung', description: 'Inventar-Erfassung per Fotoscan mit KI.', icon: CameraIcon },
+  ];
+
+  // Form submenu items
+  const formSubmenuItems: NavItem[] = [
+    { name: 'Form Builder', href: '/builder', description: 'Erstelle neue Formulare mit unserem Builder.', icon: DocumentChartBarIcon },
+    { name: 'Template Library', href: '/templates', description: 'Durchsuche vorgefertigte Form-Templates.', icon: FolderIcon },
+    { name: 'Saved Forms', href: '/forms', description: 'Verwalte deine gespeicherten Formulare.', icon: DocumentDuplicateIcon },
   ];
   
   const handleViewChange = (view: 'builder' | 'templates' | 'saved-forms') => {
@@ -123,32 +132,83 @@ export function TopNavigation({
               {/* Mega Menu */}
               {isMegaMenuOpen && (
                 <div 
-                    className="absolute z-10 -ml-4 mt-3 transform px-2 w-screen max-w-md sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2"
+                    className="absolute z-50 -ml-4 mt-3 transform px-2 w-screen max-w-md sm:px-0 lg:ml-0 lg:left-1/2 lg:-translate-x-1/2"
                     onMouseLeave={() => setTimeout(() => setMegaMenuOpen(false), 300)}
                 >
                   <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                     <div className="relative grid gap-6 bg-white dark:bg-gray-700 px-5 py-6 sm:gap-8 sm:p-8">
                       {primaryLinks.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const view = item.href.replace('/', '');
-                            if (view === 'about') {
-                              onViewChange('about');
-                            } else {
-                              handleViewChange(view as 'builder' | 'templates' | 'saved-forms');
-                            }
-                          }}
-                          className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-                        >
-                          {item.icon && <item.icon className="flex-shrink-0 h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
-                          <div className="ml-4">
-                            <p className="text-base font-medium text-gray-900 dark:text-white">{item.name}</p>
-                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
-                          </div>
-                        </Link>
+                        <div key={item.name} className="relative">
+                          {item.name === 'Form-Tool' ? (
+                            <div
+                              onMouseEnter={() => setFormSubmenuOpen(true)}
+                              onMouseLeave={() => setFormSubmenuOpen(false)}
+                              className="relative"
+                            >
+                              <div className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
+                                {item.icon && <item.icon className="flex-shrink-0 h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                                <div className="ml-4">
+                                  <p className="text-base font-medium text-gray-900 dark:text-white">{item.name}</p>
+                                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
+                                </div>
+                              </div>
+                              
+                              {/* Form Submenu */}
+                              {isFormSubmenuOpen && (
+                                <div className="absolute left-full top-0 ml-2 w-72 z-50">
+                                  <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden bg-white dark:bg-gray-700">
+                                    <div className="relative grid gap-4 px-5 py-4">
+                                      {formSubmenuItems.map((subItem) => (
+                                        <Link
+                                          key={subItem.name}
+                                          href={subItem.href}
+                                          onClick={(e) => {
+                                            if (subItem.href === '/forms' && !token) {
+                                              e.preventDefault();
+                                              window.location.href = '/login';
+                                              return;
+                                            }
+                                            e.preventDefault();
+                                            const view = subItem.href.replace('/', '');
+                                            handleViewChange(view as 'builder' | 'templates' | 'saved-forms');
+                                            setFormSubmenuOpen(false);
+                                          }}
+                                          className="-m-2 p-2 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                                        >
+                                          {subItem.icon && <subItem.icon className="flex-shrink-0 h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
+                                          <div className="ml-3">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{subItem.name}</p>
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subItem.description}</p>
+                                          </div>
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <Link
+                              href={item.href}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const view = item.href.replace('/', '');
+                                if (view === 'about') {
+                                  onViewChange('about');
+                                } else {
+                                  handleViewChange(view as 'builder' | 'templates' | 'saved-forms');
+                                }
+                              }}
+                              className="-m-3 p-3 flex items-start rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                            >
+                              {item.icon && <item.icon className="flex-shrink-0 h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                              <div className="ml-4">
+                                <p className="text-base font-medium text-gray-900 dark:text-white">{item.name}</p>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
+                              </div>
+                            </Link>
+                          )}
+                        </div>
                       ))}
                     </div>
                     <div className="px-5 py-5 bg-gray-50 dark:bg-gray-800 space-y-6 sm:flex sm:space-y-0 sm:space-x-10 sm:px-8">
@@ -176,6 +236,9 @@ export function TopNavigation({
             <Link href="/about" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
               Über uns
             </Link>
+            <Link href="/about/faq" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
+              FAQ
+            </Link>
             <Link href="/blog" onClick={() => onViewChange('about')} className="text-base font-medium text-gray-500 hover:text-gray-900">
               Blog
             </Link>
@@ -188,7 +251,7 @@ export function TopNavigation({
                 <Menu as="div" className="relative inline-block text-left">
                   <div>
                     <Menu.Button className="flex items-center justify-center w-9 h-9 rounded-full bg-indigo-600 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                      {user.username.charAt(0).toUpperCase()}
+                      {displayInitial}
                     </Menu.Button>
                   </div>
                   <Transition
@@ -272,7 +335,7 @@ export function TopNavigation({
                       {token && user ? (
                         <div>
                           <p className="text-base font-medium text-gray-900 dark:text-white">
-                            Angemeldet als {user.username}
+                            Angemeldet als {displayName || 'User'}
                           </p>
                           <button
                             onClick={logout}

@@ -1,24 +1,44 @@
-# Formular - Universal AI-Powered Erfassung System
-# Erfassung Platform
+# DataCat - Universal AI-Powered Data Capture System
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-29
-last_modified_summary: "Updated to reflect unified Erfassung concept - bringing everything into the system through forms and product cataloging."
+last_modified_date: 2025-08-12
+last_modified_summary: "Updated to reflect DataCat rebranding and current production deployment status."
 ---
 
-## 🎯 What is Erfassung?
+## 🎯 What is DataCat?
 
-**Erfassung** means "putting something into the system" - and that's exactly what we do. Whether it's capturing people through intelligent forms or cataloging products through AI-powered photo scanning, everything flows into one unified, intelligent system.
+**DataCat** is the **most perfect, universally customizable data ingestion platform** designed to be perfectly tailored for any client, any domain, any use case.
 
-### Two Paths, One System:
+### The Universal Pipeline:
 
-#### 📝 **Form-based Erfassung** (Menschen erfassen)
-Create intelligent forms, share them with your audience. Every response is automatically structured, analyzed, and ready for database storage or LLM analysis.
+**📥 Data Ingestion → 🤖 AI Analysis → 🚀 Information/Action Delivery**
 
-#### 📸 **Product Erfassung** (Produkte erfassen)  
-Take photos of products - our AI extracts all relevant data, structures it into tables, and syncs directly with your e-commerce systems and inventory management.
+#### 📥 **Infinite Data Ingestion**
+- **Custom Forms**: Perfectly designed for your domain - medical, legal, research, business
+- **Multi-Modal Capture**: Photos, documents, audio, video, IoT sensors, real-time streams
+- **API Integration**: Connect to any existing system or data source
+- **Custom Interfaces**: Built specifically for your workflow and requirements
 
-**The Result**: All captured data flows into your central database, ready for export, LLM queries, business intelligence, or integration with existing systems.
+#### 🤖 **Domain-Specific AI Analysis**  
+Each client gets a **custom AI engine** trained for their specific needs:
+- **Custom LLM pipelines** adapted to your domain language and logic
+- **Multi-modal processing** handling any data type you need
+- **Real-time analysis** with your specific business rules
+- **Quality validation** based on your industry standards
+
+#### 🚀 **Action-Oriented Delivery**
+**Human Recipients**: Get dashboards, reports, alerts, and recommendations in your preferred format
+**Machine Action**: **Robots, automation systems, and IoT devices** receive direct commands and control signals
+**System Integration**: Direct integration with your existing infrastructure and workflows
+
+### Perfect Customization Examples:
+- **🏥 Hospital**: Patient intake → AI diagnosis support → **Robotic surgery guidance**
+- **⚖️ Law Firm**: Case data → Legal analysis → **Automated document generation**
+- **🏭 Manufacturing**: Quality data → Defect detection → **Robotic sorting and quality control**
+- **🔬 Research Lab**: Sample data → AI analysis → **Automated lab equipment control**
+- **🌾 Agriculture**: Sensor data → Crop analysis → **Automated irrigation and harvesting robots**
+
+**DataCat becomes your perfect data ingestion platform - custom-built for exactly what you need.**
 
 ## Development Workflow
 
@@ -36,15 +56,15 @@ You can then visit these URLs in your browser to access the running applications
 
 ## Rebranding System
 
-Formular includes a **configuration-driven branding system** that makes it easy to rebrand the entire application for different markets or clients.
+DataCat includes a **configuration-driven branding system** that makes it easy to rebrand the entire application for different markets or clients.
 
 ### Quick Rebranding
 
 Apply predefined branding presets:
 
 ```bash
-# Formular (Default)
-./scripts/dev/rebrand.sh formular
+# DataCat (Default)
+./scripts/dev/rebrand.sh datacat
 
 # HR/Talent Management
 ./scripts/dev/rebrand.sh hr
@@ -67,7 +87,7 @@ Apply predefined branding presets:
 Create custom branding with your own brand name and use case:
 
 ```bash
-./scripts/dev/rebrand.sh custom "MyApp" "HR Intake"
+./scripts/dev/rebrand.sh custom "MyApp" "Data Capture"
 ```
 
 ### How It Works
@@ -78,7 +98,6 @@ Create custom branding with your own brand name and use case:
 - **Zero code changes**: Rebrand without touching component code
 
 For detailed documentation, see [docs/development/rebranding.md](docs/development/rebranding.md).
-- Market analysis and pricing optimization
 
 ## ✨ Architecture
 
@@ -111,7 +130,7 @@ For detailed documentation, see [docs/development/rebranding.md](docs/developmen
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd formular
+cd datacat
 
 # Install dependencies
 npm install
@@ -133,17 +152,17 @@ npm run dev
 
 ## 📊 Business Model
 
-### **Free Tier: Formular Basic**
+### **Free Tier: DataCat Basic**
 - 5 active forms, 100 responses/month
 - Basic LLM analysis
 - Community support
 
-### **Pro Tier: Formular Professional** ($29/month)
+### **Pro Tier: DataCat Professional** ($29/month)
 - Unlimited forms and responses
 - Advanced LLM analysis
 - Export and collaboration features
 
-### **Enterprise Tier: Formular Enterprise** ($99/month)
+### **Enterprise Tier: DataCat Enterprise** ($99/month)
 - Premium LLM models
 - Advanced analytics and API access
 - Priority support and SSO
@@ -176,8 +195,8 @@ npm run dev
 
 ## 🤝 Community
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/formular/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/formular/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-org/datacat/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/datacat/discussions)
 - **Documentation**: [docs/](docs/)
 
 ## 📄 License
@@ -208,6 +227,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Transform your forms into intelligence. Start building with Formular today.**
+**Transform your data capture into intelligence. Start building with DataCat today.**
 
 🚀 **Now deployed on Vercel with automated CI/CD from GitHub!**

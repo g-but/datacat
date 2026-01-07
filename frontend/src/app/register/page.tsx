@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import { http, ApiSuccess } from '../services/http';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { loginWithCredentials } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,21 +18,9 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5001/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.msg || 'Failed to register');
-      }
-
-      const { token } = await res.json();
-      login(token); // Use login from AuthContext
+      await http.post<ApiSuccess<{ ok: boolean }>>('/api/v1/auth/register', { email, password });
+      const ok = await loginWithCredentials(email, password);
+      if (!ok) throw new Error('Login failed after registration');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

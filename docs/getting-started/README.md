@@ -1,14 +1,14 @@
-# Getting Started with Universal Form Builder
+# Getting Started with DataCat
 
 ---
 created_date: 2025-07-28
-last_modified_date: 2025-07-28
-last_modified_summary: "Initial creation of getting started guide"
+last_modified_date: 2025-08-12
+last_modified_summary: "Updated to reflect DataCat rebranding and current system capabilities."
 ---
 
 ## Overview
 
-The Universal Form Builder is an AI-ready intake system framework designed to collect data for any domain via a beautiful, dynamic frontend and eventually feed that data to AI pipelines for downstream automation.
+DataCat is a universal AI-powered data capture system designed to collect and structure information from any domain via a beautiful, dynamic frontend and feed that data to AI pipelines for downstream automation and analysis.
 
 **Current Status**: Phase 1 (Frontend MVP) with backend integration in development.
 
@@ -24,7 +24,7 @@ The Universal Form Builder is an AI-ready intake system framework designed to co
 
 ```bash
 git clone <repository-url>
-cd formular
+cd datacat
 
 # Install root dependencies
 npm install
@@ -71,6 +71,34 @@ This will start:
 ## Key Features
 
 ### ✅ Current Features (Phase 1)
+### 🔐 Authentication & Profiles
+
+The app ships with a minimal JWT-based authentication flow wired to the backend (Express + tRPC + Prisma + PostgreSQL):
+
+- Frontend auth context: `frontend/src/app/context/AuthContext.tsx`
+- Login form: `frontend/src/app/components/LoginForm.tsx`
+- Registration page: `frontend/src/app/register/page.tsx`
+- Profile page (view/update name): `frontend/src/app/profile/page.tsx`
+
+Environment configuration:
+
+- Set the backend base URL in `frontend/.env.local`:
+
+```
+NEXT_PUBLIC_API_URL="http://localhost:5001"
+```
+
+Backend endpoints used:
+
+- `POST /api/v1/auth/register` → returns `{ token, user }`
+- `POST /api/v1/auth/login` → returns `{ token, user }`
+- `GET /api/v1/user/me` (Bearer token) → returns `{ user }`
+- `PUT /api/v1/user/me` (Bearer token) → update profile
+
+Notes:
+
+- Tokens are stored in `localStorage` for simplicity during development.
+- In production, prefer secure HTTP-only cookies or token rotation.
 - **Dynamic Form Builder**: Create forms with drag-and-drop interface
 - **Multi-step Forms**: Support for complex, multi-page forms
 - **Field Types**: Text, textarea, number, date, select, checkbox, radio

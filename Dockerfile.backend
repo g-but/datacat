@@ -15,7 +15,7 @@ COPY backend/package*.json ./backend/
 
 # Install dependencies
 RUN npm ci
-RUN cd backend && npm ci
+RUN cd backend && npm ci --legacy-peer-deps
 
 # Copy backend source
 COPY backend ./backend

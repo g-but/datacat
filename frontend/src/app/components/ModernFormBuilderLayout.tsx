@@ -89,7 +89,7 @@ export function ModernFormBuilderLayout({
       }
       try {
         setFormsLoading(true);
-        const res = await fetch('/api/forms', { headers: { 'x-auth-token': token } });
+        const res = await fetch('/api/v1/forms', { headers: { 'x-auth-token': token } });
         if (!res.ok) throw new Error('Failed to fetch forms');
         const data = await res.json();
         const parsedData = data.map((form: any): SavedForm => ({
@@ -182,7 +182,7 @@ export function ModernFormBuilderLayout({
     };
 
     const isUpdating = !!editingFormId;
-    const url = isUpdating ? `/api/forms/${editingFormId}` : '/api/forms';
+    const url = isUpdating ? `/api/v1/forms/${editingFormId}` : '/api/v1/forms';
     const method = isUpdating ? 'PUT' : 'POST';
 
     try {
@@ -227,7 +227,7 @@ export function ModernFormBuilderLayout({
   const handleDeleteForm = async (formId: string) => {
     if (!token) { return; }
     try {
-      await fetch(`/api/forms/${formId}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
+      await fetch(`/api/v1/forms/${formId}`, { method: 'DELETE', headers: { 'x-auth-token': token } });
       setSavedForms(prev => prev.filter(f => f.id !== formId));
     } catch (error) { console.error('Error deleting form:', error); }
   };
@@ -235,7 +235,7 @@ export function ModernFormBuilderLayout({
   const handleStatusChange = async (formId: string, newStatus: 'draft' | 'published' | 'archived') => {
     if (!token) { return; }
     try {
-      await fetch(`/api/forms/${formId}/status`, {
+      await fetch(`/api/v1/forms/${formId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
         body: JSON.stringify({ status: newStatus }),

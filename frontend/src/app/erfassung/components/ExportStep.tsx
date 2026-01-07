@@ -45,11 +45,25 @@ const exportFormats = [
     description: 'Medusa E-Commerce Format',
     icon: '🛒',
     recommended: false
+  },
+  {
+    id: 'shopify_product_json',
+    name: 'Shopify Produkt (JSON)',
+    description: 'Importierbares Shopify JSON',
+    icon: '🛍️',
+    recommended: false
+  },
+  {
+    id: 'shopware_product_json',
+    name: 'Shopware Produkt (JSON)',
+    description: 'Shopware 6 kompatibles JSON',
+    icon: '🧱',
+    recommended: false
   }
 ];
 
 export function ExportStep({ productData, onExportComplete, product }: ExportStepProps) {
-  const [selectedFormat, setSelectedFormat] = useState('csv_kivitendo');
+  const [selectedFormats, setSelectedFormats] = useState<string[]>(['csv_kivitendo']);
   const [isExporting, setIsExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
   const [exportResult, setExportResult] = useState<WorkflowProduct['exportData']>();
@@ -60,9 +74,9 @@ export function ExportStep({ productData, onExportComplete, product }: ExportSte
     // Simulate export process
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const selectedFormatData = exportFormats.find(f => f.id === selectedFormat);
+    const selectedFormatData = exportFormats.filter(f => selectedFormats.includes(f.id));
     const result = {
-      format: selectedFormatData?.name || 'Unknown',
+      format: selectedFormatData.map(f => f.name).join(', ') || 'Unknown',
       downloadUrl: `#download-${Date.now()}`,
       recordCount: 1
     };
@@ -79,14 +93,15 @@ export function ExportStep({ productData, onExportComplete, product }: ExportSte
   };
 
   const generatePreviewData = () => {
-    const format = exportFormats.find(f => f.id === selectedFormat);
+    const primary = selectedFormats[0];
+    const format = exportFormats.find(f => f.id === primary);
     
-    if (selectedFormat === 'csv_kivitendo') {
+    if (primary === 'csv_kivitendo') {
       return `title,manufacturer,articleNumber,shortDescription,price,weight
 "${productData.title}","${productData.manufacturer}","${productData.articleNumber}","${productData.shortDescription}",${productData.price},${productData.weight}`;
     }
     
-    if (selectedFormat === 'json') {
+    if (primary === 'json') {
       return JSON.stringify({
         title: productData.title,
         manufacturer: productData.manufacturer,
@@ -102,7 +117,7 @@ export function ExportStep({ productData, onExportComplete, product }: ExportSte
       }, null, 2);
     }
     
-    if (selectedFormat === 'xml') {
+    if (primary === 'xml') {
       return `<?xml version="1.0" encoding="UTF-8"?>
 <product>
   <title>${productData.title}</title>
@@ -141,11 +156,15 @@ export function ExportStep({ productData, onExportComplete, product }: ExportSte
                 <div
                   key={format.id}
                   className={`relative p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedFormat === format.id
+                    selectedFormats.includes(format.id)
                       ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
-                  onClick={() => setSelectedFormat(format.id)}
+                  onClick={() => setSelectedFormats(prev => (
+                    prev.includes(format.id)
+                      ? prev.filter(id => id !== format.id)
+                      : [...prev, format.id]
+                  ))}
                 >
                   {format.recommended && (
                     <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
@@ -162,15 +181,11 @@ export function ExportStep({ productData, onExportComplete, product }: ExportSte
                         {format.description}
                       </p>
                     </div>
-                    <div className={`ml-auto w-5 h-5 rounded-full border-2 ${
-                      selectedFormat === format.id
+                    <div className={`ml-auto w-5 h-5 rounded-sm border-2 ${
+                      selectedFormats.includes(format.id)
                         ? 'border-indigo-500 bg-indigo-500'
                         : 'border-gray-300 dark:border-gray-600'
-                    }`}>
-                      {selectedFormat === format.id && (
-                        <CheckCircleIcon className="w-5 h-5 text-white" />
-                      )}
-                    </div>
+                    }`} />
                   </div>
                 </div>
               ))}

@@ -114,6 +114,14 @@ const AboutPage = () => {
               Stellen Sie sich ein System vor, das wie ein menschliches Gehirn funktioniert – mit Augen und Ohren, die alles erfassen, 
               und einem Gehirn, das alles versteht und intelligent handelt.
             </p>
+            <div className="mt-8 max-w-3xl mx-auto text-left text-gray-700 dark:text-gray-300 space-y-2">
+              <p className="font-semibold">AI‑getriebene FormSchemas</p>
+              <ul className="list-disc pl-6 space-y-1">
+                <li>AI erzeugt typisierte FormSchemas (Zod) statt Freitext</li>
+                <li>Jedes Schema wird validiert, normalisiert und versioniert</li>
+                <li>Submissions referenzieren immer die verwendete Schema‑Version</li>
+              </ul>
+            </div>
           </div>
 
           {/* Progressive Disclosure Sections */}

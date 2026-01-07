@@ -11,6 +11,7 @@ COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 
 # Install dependencies
+ENV SKIP_CONTENTLAYER=true
 RUN npm ci
 RUN cd frontend && npm ci --legacy-peer-deps
 

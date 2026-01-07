@@ -6,6 +6,8 @@ require('dotenv').config();
 const app = express();
 const server = createServer(app);
 const { trpcMiddleware } = require('./middleware/trpc');
+const cookieParser = require('cookie-parser');
+const pinoHttp = require('pino-http');
 const webSocketService = require('./services/websocket');
 
 // Middleware
@@ -14,11 +16,15 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
+app.use(pinoHttp({
+  redact: ['req.headers.authorization', 'req.headers.cookie'],
+}));
 
 // Health check
 app.get('/', (req, res) => {
   res.json({
-    message: 'Formular Backend API',
+    message: 'DataCat Backend API',
     version: '2.0.0',
     status: 'running',
     endpoints: {
@@ -81,7 +87,7 @@ const PORT = process.env.PORT || 5001;
 webSocketService.initialize(server);
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Formular Backend Server running on port ${PORT}`);
+  console.log(`🚀 DataCat Backend Server running on port ${PORT}`);
   console.log(`📊 API endpoints available at http://localhost:${PORT}/api/trpc`);
   console.log(`🔌 WebSocket server ready for real-time connections`);
   console.log(`📚 Architecture documentation: /backend/ARCHITECTURE.md`);

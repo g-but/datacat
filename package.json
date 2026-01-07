@@ -1,7 +1,7 @@
 {
-  "name": "formular",
+  "name": "datacat",
   "version": "1.0.0",
-  "description": "AI-Ready Intake System - Universal Form Builder",
+  "description": "Universal AI-Powered Data Capture System",
   "private": true,
   "scripts": {
     "dev": "echo '\n🚀 Starting development servers...\n' && concurrently -k -n FRONTEND,BACKEND -c blue,green \"cd frontend && npm run dev\" \"cd backend && npm start\"",
@@ -27,11 +27,13 @@
     "test:report": "npx playwright show-report"
   },
   "keywords": [
-    "hr",
-    "intake",
+    "data-capture",
+    "forms",
     "ai",
     "nextjs",
-    "react"
+    "react",
+    "typescript",
+    "automation"
   ],
   "license": "MIT",
   "devDependencies": {

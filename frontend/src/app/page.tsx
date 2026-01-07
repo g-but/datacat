@@ -15,10 +15,10 @@ export default function Home() {
               <span className="text-indigo-600">Erfassung</span> leicht gemacht
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
-              Bringen Sie alles ins System - Menschen durch intelligente Formulare, Produkte durch KI-gestützte Fotoscan-Erfassung. 
-              <span className="font-semibold text-indigo-600"> Ein System, zwei Wege, endlose Möglichkeiten.</span>
+              Erfassen Sie Daten auf zwei verschiedene Wege - strukturierte Formulare für Menschen, KI-Analyse für Produkte.
+              <span className="font-semibold text-indigo-600"> Ein intelligentes System für alle Ihre Datenerfassungs-Bedürfnisse.</span>
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <Link
                 href="/builder"
@@ -32,7 +32,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center rounded-xl bg-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-purple-500 transition-colors"
               >
                 <CameraIcon className="mr-2 h-5 w-5" />
-                Produkt-Erfassung
+                Produkt-Scan
               </Link>
             </div>
 
@@ -41,19 +41,19 @@ export default function Home() {
               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
                 <DocumentTextIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Menschen erfassen
+                  Formular-Erfassung
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Intelligente Formulare mit KI-Analyse sammeln und strukturieren Antworten automatisch für Ihre Datenbank.
+                  Erstellen Sie intelligente Formulare für Umfragen, Bewerbungen, Feedback. KI analysiert die Antworten automatisch.
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
                 <CameraIcon className="h-8 w-8 text-purple-600 dark:text-purple-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Produkte erfassen  
+                  Produkt-Scan
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Fotografieren Sie Produkte - KI extrahiert alle Daten und synchronisiert direkt mit Ihrem E-Commerce System.
+                  Fotografieren Sie Produkte - KI extrahiert alle relevanten Daten und erstellt strukturierte Produktkataloge.
                 </p>
               </div>
             </div>
@@ -66,10 +66,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Zwei Wege der Erfassung, ein intelligentes System
+              Zwei Wege der Datenerfassung, ein System
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Egal ob Menschen oder Produkte - unser KI-System strukturiert Ihre Daten automatisch für Datenbank, Export und LLM-Analyse.
+              Wählen Sie den passenden Weg für Ihre Bedürfnisse - strukturierte Formulare oder KI-gestützter Produktscan.
             </p>
           </div>
           
@@ -83,8 +83,8 @@ export default function Home() {
                 Formular-Erfassung
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Erstellen Sie intelligente Formulare, teilen Sie sie mit Ihren Zielgruppen. 
-                Jede Antwort wird automatisch strukturiert und analysiert.
+                Erstellen Sie benutzerdefinierte Formulare für Umfragen, Anmeldungen, Bewerbungen.
+                KI analysiert die Antworten und strukturiert sie für Datenbanken und Berichte.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
@@ -116,11 +116,11 @@ export default function Home() {
                 <CameraIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                Produkt-Erfassung
+                Produkt-Scan
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Fotografieren Sie Produkte - unsere KI extrahiert automatisch alle relevanten Daten 
-                und synchronisiert sie mit Ihrem Inventar und E-Commerce System.
+                Fotografieren Sie Produkte - KI erkennt automatisch Artikelnummern, Beschreibungen,
+                Maße und Kategorien. Perfekt für E-Commerce und Inventar-Management.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
@@ -141,7 +141,7 @@ export default function Home() {
                   href="/erfassung"
                   className="inline-flex items-center text-purple-600 dark:text-purple-400 font-medium hover:text-purple-500 transition-colors"
                 >
-                  Produkt erfassen →
+                  Produkt-Scan starten →
                 </Link>
               </div>
             </div>
@@ -187,7 +187,7 @@ export default function Home() {
               className="inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/20 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-white/20 transition-colors"
             >
               <CameraIcon className="mr-2 h-5 w-5" />
-              Produkt-Erfassung testen
+              Produkt-Scan testen
             </Link>
           </div>
         </div>

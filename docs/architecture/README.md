@@ -2,13 +2,13 @@
 
 ---
 created_date: 2025-07-28
-last_modified_date: 2025-01-27
-last_modified_summary: "Updated with universal AI-powered form intelligence platform architecture"
+last_modified_date: 2025-08-13
+last_modified_summary: "Consolidate to Next.js API, AI FormSchema pipeline, and data integrity layers."
 ---
 
 ## Overview
 
-Formular follows a modern, modular architecture designed for scalability, maintainability, and AI integration. The system is built as a universal platform that can be easily adapted for any industry or use case where form responses need intelligent analysis.
+Formular follows a modern, modular architecture designed for scalability, maintainability, and AI integration. The system is now consolidated to a single Next.js app (UI + API) with Prisma and versioned FormSchemas. AI generates typed schemas that are validated and normalized before persistence. Submissions always reference the schemaVersion used.
 
 ## High-Level Architecture
 

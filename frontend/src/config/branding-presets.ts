@@ -61,16 +61,16 @@ export const brandingPresets: Record<string, Partial<BrandingConfig>> = {
     domain: 'formbuilder.com'
   },
 
-  // Formular - Main Brand
-  formular: {
-    name: 'Formular',
-    shortName: 'Formular',
-    description: 'AI-Ready Intake System - Universal Form Builder',
-    primaryColor: '#3B82F6', // Blue
-    secondaryColor: '#1F2937', // Gray
-    accentColor: '#10B981', // Green
-    useCase: 'Universal Intake',
-    domain: 'formular.com'
+  // DataCat - Main Brand
+  datacat: {
+    name: 'DataCat',
+    shortName: 'DataCat',
+    description: 'AI-powered Data Capture System – Forms and Photo-based Inventory',
+    primaryColor: '#3B82F6',
+    secondaryColor: '#1F2937',
+    accentColor: '#10B981',
+    useCase: 'Erfassung & Inventar',
+    domain: 'datacat.ch'
   }
 };
 

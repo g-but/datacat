@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import { http, ApiSuccess } from '../services/http';
 
 interface LoginFormProps {
   onSuccess?: () => void; // Optional callback for successful login
@@ -15,7 +16,7 @@ export function LoginForm({ onSuccess, showRegisterLink = true, className = '' }
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { loginWithCredentials } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,21 +24,8 @@ export function LoginForm({ onSuccess, showRegisterLink = true, className = '' }
     setError('');
 
     try {
-      const res = await fetch('http://localhost:5001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.msg || 'Failed to login');
-      }
-
-      const { token } = await res.json();
-      login(token);
+      const ok = await loginWithCredentials(email, password);
+      if (!ok) throw new Error('Invalid credentials');
       
       // Call optional success callback (for modal usage)
       if (onSuccess) {

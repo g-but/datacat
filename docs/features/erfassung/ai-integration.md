@@ -1,5 +1,41 @@
 # Erfassung AI Integration Strategy
 
+created_date: 2025-07-10
+last_modified_date: 2025-08-13
+last_modified_summary: "Document AI-driven FormSchema generation, validation pipeline, and data integrity guarantees."
+
+## AI-driven FormSchema generation (best practice)
+
+- The AI proposes a FormSchema (typed Zod shape) rather than plain text instructions.
+- Output contract: AI returns a JSON object conforming to the FormSchema DSL (field array, types, constraints, relations, sectioning, version).
+- Versioning: Every generated schema carries `schemaVersion` and a `source.meta` block (model, prompt hash) for auditability.
+
+### Guardrails
+- Strict Zod validation of AI output. On failure: return actionable errors and auto-generate a minimal viable schema as fallback.
+- Normalization pass enforces defaults (labels, ids, required flags, regexes, min/max, enum options).
+- Sensitive fields policy: detect PII-like names; apply masking rules and storage encryption flags in metadata.
+
+### Data integrity pipeline
+1) Client-side Zod validation (zodResolver) ensures UX-level correctness.
+2) Server route validates the same schema; rejects drift.
+3) Prisma-level constraints: NOT NULL, enum, length; foreign keys for references; transaction boundaries.
+4) Property-based tests (Playwright/Vitest) generate randomized inputs for each field type and assert invariants.
+5) Post-ingest checks: background job verifies referential integrity, runs schema-specific checks (e.g., required groups, cross-field constraints).
+
+### Structured data first
+- All forms store `schema` (JSON) + `currentVersion` with `versions[]` history.
+- Submissions store `data` (JSON) and `metadata` with a pointer to `schemaVersion` used at submission time.
+- Breaking changes: create a new `FormVersion`; readers use version-aware adapters.
+
+## Prompts and adapters
+- Prompts describe domain goals and constraints, not UI components.
+- Adapter converts model output to the FormSchema DSL, with explicit error reporting when fields are underspecified.
+- Idempotency keys on analysis tasks; deduplicate per input hash.
+
+## Observability
+- Structured logs include prompt+response hashes, schemaVersion, and validation outcomes.
+- Sentry for errors; OpenTelemetry traces around generation, validation, and persistence.
+
 ## Overview
 This document outlines the AI/ML services integration strategy for Erfassung's product cataloging system, focusing on OCR, image analysis, and product classification capabilities.
 

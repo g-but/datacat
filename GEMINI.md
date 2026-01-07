@@ -1,11 +1,11 @@
-# Gemini Project: Universal Form Builder
+# Gemini Project: Erfassung Platform (Universal Form Builder)
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-08
-last_modified_summary: "Added documentation metadata block."
+last_modified_date: 2025-08-07
+last_modified_summary: "Updated with deployment status and available MCP servers documentation."
 ---
 
-This document provides the essential context for the Universal Form Builder project.
+This document provides the essential context for the Erfassung Platform (Universal Form Builder) project.
 
 ## 1. Mission
 
@@ -35,10 +35,42 @@ This section will be updated as the project is set up.
 - **Run Tests**: `npm test`
 - **Lint & Format**: `npm run lint`
 
-## 5. Development Roadmap
+## 5. Development Roadmap & Current Status
 
-- **✅ Phase 1 (Current Focus):** Build a standalone Frontend MVP with a mock API.
-- **⏭️ Phase 2:** Implement the Node.js/Express backend and connect to a PostgreSQL database.
-- **⏭️ Phase 3:** Integrate with an LLM for AI-powered suggestions.
+- **✅ Phase 1:** Frontend MVP with Next.js + Tailwind CSS - Complete
+- **🚀 Deployment:** Auto-deployed to Vercel from GitHub main branch at https://formular-erfassung-orangecat.vercel.app
+- **⏭️ Phase 2:** Implement tRPC backend with Prisma ORM and PostgreSQL database
+- **⏭️ Phase 3:** Integrate with AI for response analysis and form optimization
 
-For more detailed project information, see `VISION.md`.
+## 6. Available MCP Servers & Development Tools
+
+This project has access to powerful MCP (Model Context Protocol) servers for enhanced development capabilities:
+
+### Documentation & Learning
+- **Context7**: Get up-to-date documentation for any library (Next.js, React, Tailwind, Prisma, etc.)
+- Usage: Ask for "latest Next.js documentation" or "React Hook Form examples"
+
+### Testing & Quality Assurance
+- **Playwright**: Full browser automation, E2E testing, form interaction, screenshots
+- **Puppeteer**: Browser automation alternative with navigation and JavaScript evaluation
+- **Browser Tools**: Console logs, network monitoring, accessibility/performance/SEO audits
+
+### Deployment & Infrastructure
+- **GitHub**: Repository management, PR reviews, issue tracking, workflow automation
+- **Vercel**: Deployment monitoring, environment configuration, performance metrics
+- **Docker**: Container management for development and production environments
+
+### Development Workflow
+1. **Documentation**: Use Context7 for latest library documentation
+2. **Testing**: Use Playwright for comprehensive E2E testing
+3. **Debugging**: Use Browser Tools for performance and accessibility analysis
+4. **Deployment**: Use Vercel tools for monitoring and configuration
+5. **Project Management**: Use GitHub for issues and code reviews
+
+### Best Practices
+- Always check latest documentation via Context7 before implementation
+- Run accessibility and performance audits via Browser Tools
+- Use Playwright for automated testing of form workflows
+- Monitor deployments and performance via Vercel integration
+
+For more detailed project information, see `VISION.md` and `CLAUDE.md`.

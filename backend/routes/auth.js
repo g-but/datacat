@@ -1,17 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const { validate } = require('../middleware/validate');
+const { z } = require('zod');
 const authController = require('../controllers/authController');
 const auth = require('../middleware/auth');
+const { authLimiter } = require('../middleware/rateLimit');
 
 // @route   POST api/auth/register
 // @desc    Register a new user
 // @access  Public
-router.post('/register', authController.register);
+router.post('/register', authLimiter, validate({ body: z.object({ email: z.string().email(), password: z.string().min(8), name: z.string().optional() }) }), authController.register);
 
 // @route   POST api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public
-router.post('/login', authController.login);
+router.post('/login', authLimiter, validate({ body: z.object({ email: z.string().email(), password: z.string().min(1) }) }), authController.login);
+
+// @route   POST api/auth/logout
+// @desc    Logout user (clear cookies)
+// @access  Public (idempotent)
+router.post('/logout', authController.logout);
 
 // @route   GET api/auth/profile
 // @desc    Get current user profile

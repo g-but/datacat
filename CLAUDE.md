@@ -1,22 +1,50 @@
-# CLAUDE.md - AI Assistant Context for Erfassung Platform
+# CLAUDE.md - AI Assistant Context for DataCat Platform
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-29
-last_modified_summary: "Updated to reflect unified Erfassung concept - bringing everything into the system through forms and product cataloging."
+last_modified_date: 2025-08-12
+last_modified_summary: "Updated to reflect DataCat rebranding and current project state with production deployments."
 ---
 
 ## Project Overview
-**Erfassung Platform** is a universal AI-powered system for putting things "into the system." We provide two unified pathways:
+**DataCat** is the **most perfect, universally customizable data ingestion platform** built for any client, any domain, any use case. The core workflow is:
 
-1. **Form-based Erfassung** (Menschen erfassen): Create intelligent forms, share them, collect responses that are automatically analyzed and structured
-2. **Product Erfassung** (Produkte erfassen): Take photos of products, AI extracts data, structures it into tables, and syncs with e-commerce/inventory systems
+**Data Ingestion → AI Analysis → Information/Action Delivery**
 
-All captured data flows into a central database for export, LLM analysis, business intelligence, and system integration. The core concept is **Erfassung** - the German word for "capturing/recording" something into a system.
+### 1. **Universal Data Ingestion** (Infinitely customizable)
+   - **Form-based**: Custom forms for any domain - medical, legal, scientific, business, government
+   - **Visual capture**: Photos, documents, scans, video analysis
+   - **Direct upload**: Files, APIs, real-time data streams
+   - **IoT integration**: Sensors, devices, automated data feeds
+   - **Custom interfaces**: Tailored for each client's specific workflow
+
+### 2. **AI Analysis Engine** (Domain-specific intelligence)
+   - **Custom LLM pipelines** trained for client's specific domain
+   - **Multi-modal processing**: Text, images, audio, structured data
+   - **Real-time analysis** with configurable processing rules
+   - **Pattern recognition** adapted to client's business logic
+   - **Validation and quality control** based on domain requirements
+
+### 3. **Action-Oriented Delivery** (Human + Machine clients)
+   - **Human recipients**: Professionals receive dashboards, reports, alerts, recommendations
+   - **Machine action**: Robots, automation systems, IoT devices receive commands
+   - **System integration**: Direct API calls to client's existing infrastructure
+   - **Automated workflows**: Trigger actions based on analyzed data
+   - **Custom outputs**: Any format the client needs - JSON, XML, database writes, physical actions
+
+### Complete Customization for Every Client
+DataCat is designed to be **perfectly customized** for each client's unique requirements. Whether you're:
+- A hospital needing patient data → diagnosis support → robotic surgery guidance
+- A law firm processing cases → legal analysis → automated document generation
+- A manufacturer capturing quality data → defect detection → robotic sorting
+- A research lab collecting samples → AI analysis → automated lab equipment control
+
+**DataCat adapts to become your perfect data ingestion and action platform.**
 
 ## Current Status
 - **Phase 1**: Frontend MVP (Next.js + Tailwind CSS) - ✅ Complete
 - **Phase 2**: Production backend architecture planning
 - **Active Development**: Form sharing system and LLM response analysis
+- **Deployment**: Auto-deployed to Vercel from GitHub main branch at https://datacat-platform.vercel.app
 - **Next Phases**: Multi-user collaboration, real-time form responses, AI-powered insights
 
 ## Tech Stack
@@ -42,16 +70,32 @@ All captured data flows into a central database for export, LLM analysis, busine
 ## Project Structure
 ```
 /
-├── frontend/                 # Next.js application
+├── frontend/                 # Next.js application (DataCat UI)
 │   ├── src/app/             # App Router pages
-│   │   ├── layout.tsx       # Root layout with fonts
-│   │   ├── page.tsx         # Home page (default Next.js)
-│   │   └── globals.css      # Global styles
+│   │   ├── builder/         # Form builder interface
+│   │   ├── erfassung/       # Product capture workflows
+│   │   ├── components/      # Reusable UI components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── services/        # API services and integrations
+│   │   └── types/           # TypeScript definitions
 │   ├── public/              # Static assets
-│   └── package.json         # Dependencies
-├── VISION.md                # Detailed project vision & roadmap
-├── README.md                # Basic project info
-└── CLAUDE.md                # This file
+│   └── package.json         # Frontend dependencies
+├── backend/                 # Production backend (tRPC + Prisma)
+│   ├── controllers/         # Route handlers
+│   ├── services/            # Business logic services
+│   ├── trpc/               # tRPC routers and procedures
+│   ├── prisma/             # Database schema and migrations
+│   └── package.json         # Backend dependencies
+├── docs/                    # Documentation
+│   ├── architecture/        # Technical architecture docs
+│   ├── business/           # Business requirements and use cases
+│   ├── deployment/         # Deployment guides
+│   └── getting-started/    # Development setup guides
+├── tests/                   # E2E tests (Playwright)
+├── docker-compose.yml       # Development environment
+├── VISION.md               # Detailed project vision & roadmap
+├── README.md               # Basic project info
+└── CLAUDE.md               # This file
 ```
 
 ## Key Commands
@@ -92,13 +136,15 @@ npm run lint         # Run ESLint
 - Store field metadata for future AI parsing
 - Structure data for LLM consumption
 
-## Current Phase 1 Goals
-- [ ] Replace default Next.js page with HR intake form
-- [ ] Implement dynamic field management
-- [ ] Add form validation and error handling
-- [ ] Implement localStorage persistence
-- [ ] Create beautiful, consumer-grade UX
-- [ ] Add microinteractions and animations
+## Current Development Goals
+- [x] Complete modern form builder with drag-drop interface
+- [x] Implement multi-step form creation and management
+- [x] Add comprehensive template library system
+- [x] Create product capture workflow (Erfassung)
+- [x] Build responsive UI with consumer-grade UX
+- [ ] Implement real-time collaboration features
+- [ ] Add AI-powered response analysis
+- [ ] Build advanced export and integration capabilities
 
 ## Testing Strategy
 - Manual testing for UX/UI during Phase 1
@@ -125,11 +171,54 @@ npm run lint         # Run ESLint
 - Integration with existing HR systems
 - AI-powered form optimization
 
+## Available MCP Servers & Tools
+
+This project has access to several MCP (Model Context Protocol) servers that provide powerful development and deployment capabilities:
+
+### Documentation & Learning
+- **Context7** (`context7`): Access up-to-date documentation and code examples for any library or framework. Use this to get the latest docs for Next.js, React, Tailwind, tRPC, Prisma, etc.
+
+### Browser Automation & Testing
+- **Playwright** (`playwright`): Full browser automation including navigation, screenshots, form interaction, file uploads, and HTTP requests
+- **Puppeteer** (`puppeteer`): Alternative browser automation with navigation, screenshots, clicking, and JavaScript evaluation
+- **Browser Tools** (`browser-tools`): Console logs, network errors, accessibility audits, performance audits, SEO audits, and debugging tools
+
+### Development & Infrastructure
+- **GitHub** (`github`): Complete GitHub integration for repositories, issues, pull requests, workflows, and project management
+- **Vercel** (`vercel`): Deployment management, project configuration, environment variables, and production monitoring
+- **Docker** (`docker`): Container management, image building, network configuration, and volume management
+
+### Usage Examples
+```bash
+# Get latest Next.js documentation
+context7: "Next.js app router documentation"
+
+# Run E2E tests
+playwright: navigate → fill forms → screenshot → assert
+
+# Check deployment status
+vercel: get deployment logs and status
+
+# Review PRs and manage issues
+github: list issues, create PRs, review code
+
+# Debug frontend issues
+browser-tools: check console errors, run accessibility audit
+```
+
+### Best Practices
+- Use Context7 for any library documentation needs
+- Use Playwright for comprehensive E2E testing
+- Use GitHub tools for issue management and code reviews
+- Use Vercel tools for deployment monitoring and configuration
+- Use Browser Tools for debugging and optimization
+
 ## Resources
 - **Vision Document**: See VISION.md for detailed project scope
-- **Next.js Docs**: https://nextjs.org/docs
-- **Tailwind CSS**: https://tailwindcss.com/docs
+- **Next.js Docs**: https://nextjs.org/docs (or use Context7 for latest)
+- **Tailwind CSS**: https://tailwindcss.com/docs (or use Context7 for latest)
 - **React Hook Form**: https://react-hook-form.com/ (planned)
+- **MCP Documentation**: https://modelcontextprotocol.io/
 
 ## Notes for AI Assistant
 - Focus on Phase 1 frontend development

@@ -2,6 +2,18 @@ const prisma = require('../lib/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { success, error, validationError, unauthorized, notFound, created } = require('../utils/responseHandlers');
+const redis = require('../lib/redis');
+
+function setAuthCookies(res, token) {
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('token', token, {
+    httpOnly: true,
+    sameSite: isProd ? 'strict' : 'lax',
+    secure: isProd,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    path: '/',
+  });
+}
 
 exports.register = async (req, res) => {
   const { email, password, name } = req.body;
@@ -60,7 +72,7 @@ exports.register = async (req, res) => {
           console.error('JWT signing error:', err);
           return error(res, 'Token generation failed');
         }
-        
+        setAuthCookies(res, token);
         return created(res, { token, user }, 'User registered successfully');
       }
     );
@@ -121,7 +133,7 @@ exports.login = async (req, res) => {
           console.error('JWT signing error:', err);
           return error(res, 'Token generation failed');
         }
-        
+        setAuthCookies(res, token);
         return success(res, {
           token,
           user: {
@@ -258,3 +270,13 @@ exports.verifyToken = async (req, res) => {
     return error(res, 'Server error verifying token', 500, err);
   }
 }; 
+
+// Logout: clear cookie
+exports.logout = async (req, res) => {
+  try {
+    res.clearCookie('token', { path: '/' });
+    return success(res, {}, 'Logged out');
+  } catch (err) {
+    return error(res, 'Server error during logout', 500, err);
+  }
+};

@@ -29,7 +29,7 @@ const SubmissionsPage = () => {
 
         const fetchSubmissions = async () => {
             setLoading(true);
-            const url = new URL(`/api/submissions/${formId}`, window.location.origin);
+            const url = new URL(`/api/v1/submissions/${formId}`, window.location.origin);
             if (search) url.searchParams.append('search', search);
             if (startDate) url.searchParams.append('startDate', startDate.toISOString());
             if (endDate) url.searchParams.append('endDate', endDate.toISOString());

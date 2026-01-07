@@ -32,7 +32,7 @@ const PublicFormPage = () => {
     const fetchForm = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/forms/public/${id}`);
+        const res = await fetch(`/api/v1/forms/public/${id}`);
         if (res.status === 404) {
           setError('This form could not be found or has not been published.');
         } else if (!res.ok) {
@@ -63,7 +63,7 @@ const PublicFormPage = () => {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/submissions', {
+      const res = await fetch('/api/v1/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ form_id: id, data: formData }),

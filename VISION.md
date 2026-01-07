@@ -1,13 +1,13 @@
-# Vision – Formular
+# Vision – DataCat
 ---
 created_date: 2024-07-08
-last_modified_date: 2025-07-28
-last_modified_summary: "Updated for production roadmap with form sharing and LLM analysis capabilities."
+last_modified_date: 2025-08-12
+last_modified_summary: "Updated to reflect DataCat rebranding and current production capabilities."
 ---
 
-##  Project: Formular – AI-Ready Intake System (Universal Form Builder)
+##  Project: DataCat – The Most Perfect Data Ingestion Platform
 
-Formular is the **intake engine** framework for all future Botsmann solutions. The system is designed to collect data for **any** domain via a beautiful, dynamic frontend and eventually feed that data to AI pipelines for downstream automation.
+DataCat is the **most perfect, universally customizable data ingestion platform** that can be custom-configured for any client, any domain, any use case. The platform creates a complete **Data → Intelligence → Action** workflow serving human professionals and machine automation systems across all industries.
 
 This document outlines:
 - The **vision**, **success metrics**, and **risks**
@@ -16,28 +16,57 @@ This document outlines:
 
 ---
 
-##  Big Picture: What Is Formular?
-Formular is a modular, **intake form builder** and data pipeline that:
-1. Starts with an ultra-modern, consumer-grade frontend for data entry
-2. Stores form data in a scalable, well-structured backend
-3. Makes the data accessible to LLMs for downstream tasks
+##  Big Picture: What Is DataCat?
+DataCat is the **most perfect, infinitely customizable data ingestion platform** that adapts to become exactly what each client needs:
 
-This system is the foundation for:
--  HR & Talent Management
--  Medical intake (patients)
-- ⚖️ Legal intake (clients)
--  Public sector onboarding (citizens)
--  Any custom intake scenario
+**📥 Custom Data Ingestion → 🤖 Custom AI Analysis → 🚀 Custom Action Delivery**
+
+### Universal Adaptability:
+1. **Custom ingestion interfaces** designed specifically for each client's workflow
+2. **Domain-specific AI processing** trained on client's unique requirements  
+3. **Action-oriented delivery** to humans AND machines (including robots and automation systems)
+
+### Perfect Client Customization Examples:
+
+**🏥 Healthcare System**:
+- **Ingestion**: Patient forms, medical images, lab results, vital signs
+- **AI Analysis**: Diagnosis support, treatment recommendations, risk assessment
+- **Action Delivery**: Doctor dashboards + **Robotic surgery guidance systems**
+
+**⚖️ Legal Practice**:
+- **Ingestion**: Case documents, client interviews, legal research, evidence
+- **AI Analysis**: Case law matching, document analysis, risk evaluation
+- **Action Delivery**: Attorney reports + **Automated document generation systems**
+
+**🏭 Manufacturing Facility**:
+- **Ingestion**: Quality sensors, production data, defect images, machine telemetry
+- **AI Analysis**: Defect detection, predictive maintenance, quality control
+- **Action Delivery**: Manager dashboards + **Robotic sorting and quality control systems**
+
+**🔬 Research Laboratory**:
+- **Ingestion**: Sample data, experimental results, sensor readings, observations
+- **AI Analysis**: Pattern detection, hypothesis validation, result interpretation
+- **Action Delivery**: Researcher insights + **Automated lab equipment control**
+
+**🌾 Agricultural Operation**:
+- **Ingestion**: Soil sensors, weather data, crop images, yield measurements
+- **AI Analysis**: Growth optimization, pest detection, harvest timing
+- **Action Delivery**: Farmer recommendations + **Automated irrigation and harvesting robots**
+
+### The Perfect Platform Promise:
+**DataCat becomes exactly the data ingestion platform each client needs** - with custom interfaces, domain-specific AI, and action delivery to both humans and machines.
 
 ---
 
-##  Current Scope: AI-Powered Universal Form Builder
+##  Current Scope: The Perfect Universal Data Ingestion Platform
 
-We're building a fully dynamic form builder where:
-- HR can enter new employee data
-- Fields can be added/removed per person
-- Data syncs to a database in real-time
-- This data will **later** be used by LLMs to analyze strengths, recommend tasks, and build hiring plans
+We're building the **most perfect data ingestion platform** that can be completely customized for any client:
+- **Infinite customization** - every interface, workflow, and output perfectly tailored
+- **Universal applicability** - works for any domain, any use case, any industry
+- **Machine action capability** - delivers commands directly to robots and automation systems
+- **Domain-specific AI** - custom LLM pipelines trained for each client's specific needs
+- **Perfect integration** - seamlessly connects with any existing infrastructure
+- **Real-time processing** - immediate analysis and action delivery
 
 ---
 
