@@ -38,7 +38,7 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.5",
-    "openai": "^5.10.2",
+    "openai": "^5.20.3",
     "pg": "^8.16.3",
     "pino-http": "^8.6.1",
     "prisma": "^6.12.0",
