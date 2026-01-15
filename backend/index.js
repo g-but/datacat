@@ -55,6 +55,12 @@ app.use('/api/v1/forms', require('./routes/forms'));
 app.use('/api/v1/submissions', require('./routes/submissions'));
 app.use('/api/v1/databases', require('./routes/database'));
 
+// Data Ingestion API routes
+app.use('/api/v1/audio', require('./routes/audio'));
+app.use('/api/v1/images', require('./routes/images'));
+app.use('/api/v1/videos', require('./routes/videos'));
+app.use('/api/v1/websites', require('./routes/websites'));
+
 // Deprecated REST routes (redirect to v1)
 app.use('/api/auth', (req, res) => {
   res.status(301).json({

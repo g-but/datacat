@@ -15,12 +15,12 @@ import Link from 'next/link';
 
 interface FormCaptureLandingProps {
   onStartBuilding: () => void;
+  onSubmit?: () => void;
+  onFieldsChange?: () => void;
 }
 
 export function FormCaptureLanding({
   onStartBuilding,
-  onSubmit,
-  onFieldsChange
 }: FormCaptureLandingProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

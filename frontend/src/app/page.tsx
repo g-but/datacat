@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { RocketLaunchIcon, CheckCircleIcon, DocumentTextIcon, CameraIcon, CircleStackIcon } from '@heroicons/react/24/outline';
+import { RocketLaunchIcon, CheckCircleIcon, DocumentTextIcon, CameraIcon, CircleStackIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
 export default function Home() {
@@ -34,10 +34,17 @@ export default function Home() {
                 <CameraIcon className="mr-2 h-5 w-5" />
                 Produkt-Scan
               </Link>
+              <Link
+                href="/ingest"
+                className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-emerald-500 transition-colors"
+              >
+                <CloudArrowUpIcon className="mr-2 h-5 w-5" />
+                Data Ingestion
+              </Link>
             </div>
 
             {/* Quick Overview */}
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
                 <DocumentTextIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -54,6 +61,15 @@ export default function Home() {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Fotografieren Sie Produkte - KI extrahiert alle relevanten Daten und erstellt strukturierte Produktkataloge.
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <CloudArrowUpIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Data Ingestion
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Erfassen Sie Daten aus jeder Quelle - Audio, Video, Bilder, Websites. KI analysiert und strukturiert automatisch.
                 </p>
               </div>
             </div>

@@ -33,6 +33,7 @@ model User {
   analysisHistory LLMAnalysis[]
   accounts        Account[]
   sessions        Session[]
+  dataSources     DataSource[]
 
   @@map("users")
 }
@@ -50,6 +51,7 @@ model Organization {
   // Relations
   users       User[]
   forms       Form[]
+  dataSources DataSource[]
 
   @@map("organizations")
 }
@@ -116,6 +118,7 @@ model Form {
   // Relations
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization    Organization? @relation(fields: [organizationId], references: [id])
+  dataSources     DataSource[]
 
   @@map("forms")
 }
@@ -319,4 +322,96 @@ enum JobStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+// ============================================
+// DATA INGESTION SYSTEM
+// Multi-source data capture (voice, images, video, etc.)
+// ============================================
+
+// Generic data source that can hold any type of ingested data
+model DataSource {
+  id              String          @id @default(cuid())
+  type            DataSourceType
+  name            String
+  description     String?
+  status          IngestionStatus @default(PENDING)
+
+  // Original file information
+  originalFilename String?
+  mimeType        String?
+  fileSize        Int?            // bytes
+  filePath        String?         // Storage path (S3, local, etc.)
+  fileUrl         String?         // Public URL if available
+
+  // Processed/extracted data
+  extractedText   String?         @db.Text  // Transcription, OCR text, etc.
+  extractedData   Json?           // Structured extracted data
+  metadata        Json            @default("{}")
+
+  // Processing details
+  processingTime  Int?            // milliseconds
+  aiModel         String?         // Model used for processing
+  confidence      Float?          // AI confidence score
+  error           String?
+
+  // Ownership
+  userId          String
+  organizationId  String?
+  formId          String?         // Link to form if used for form submission
+
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  processedAt     DateTime?
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization    Organization?   @relation(fields: [organizationId], references: [id])
+  form            Form?           @relation(fields: [formId], references: [id])
+  analyses        DataSourceAnalysis[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@map("data_sources")
+}
+
+// Analysis records specific to data sources
+model DataSourceAnalysis {
+  id              String          @id @default(cuid())
+  dataSourceId    String
+  analysisType    AnalysisType
+  prompt          String?
+  result          Json
+  model           String
+  processingTime  Int?
+  status          AnalysisStatus  @default(PENDING)
+  error           String?
+  createdAt       DateTime        @default(now())
+
+  dataSource      DataSource      @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@map("data_source_analyses")
+}
+
+enum DataSourceType {
+  AUDIO           // Voice recordings, audio files
+  IMAGE           // Photos, scans, screenshots
+  VIDEO           // Video files
+  DOCUMENT        // PDFs, Word docs, etc.
+  WEBSITE         // Scraped web content
+  DATABASE        // External database connection
+  API             // External API data
+  MESSAGE         // Chat messages, emails
+  IOT             // IoT sensor data
+  CUSTOM          // Custom data type
+}
+
+enum IngestionStatus {
+  PENDING         // Uploaded, waiting to process
+  PROCESSING      // Currently being processed
+  COMPLETED       // Successfully processed
+  FAILED          // Processing failed
+  ARCHIVED        // Archived/stored only
 }
