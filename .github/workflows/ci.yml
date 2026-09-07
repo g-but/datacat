@@ -35,15 +35,32 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: |
+            frontend/pnpm-lock.yaml
+            backend/pnpm-lock.yaml
 
-      - name: Install
+      - name: Install (frontend)
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
+      # backend/ has its own lockfile and, as of this commit, its own tests.
+      # Without this step `pnpm run verify` fails at `test:backend` with
+      # "Command vitest not found" — the script would be wired and the gate
+      # would be red, which is worse than the gate that was simply absent.
+      - name: Install (backend)
+        working-directory: backend
+        run: pnpm install --frozen-lockfile
+
       # SSOT: one definition of "verified" lives in the ROOT package.json
-      # `verify` (lint + typecheck + build), run identically here and locally.
-      # Runs from repo root — the scripts cd into frontend themselves.
+      # `verify` (format + lint + typecheck + test + build), run identically
+      # here and locally. Runs from repo root — the scripts cd into the
+      # workspace they need.
+      #
+      # `test` covers BOTH halves as of this commit. backend/ previously had a
+      # `test` script that was `echo "Error: no test specified" && exit 1`, and
+      # the root `test` only ran the frontend — so backend/utils/
+      # responseHandlers.test.js sat committed and executed by nothing, which
+      # its own docstring pointed out.
       #
       # Build is IN the gate as of 2026-08-04. It was deferred on a prisma-engine
       # issue, and the cost of that gap was exact: contentlayer 0.3.1 reaches into
