@@ -70,3 +70,23 @@
     --bp-danger-bg: rgb(127 29 29 / 0.2);
   }
 }
+
+/*
+ * Tailwind's preflight resets `list-style: none` on every ul/ol. bip-kit's
+ * stylesheet styles list ::markers (`.bp-ul .bp-li::marker`) but never
+ * re-declares a list type, so under Tailwind it colours markers that do not
+ * exist: every bullet and every number in the article silently disappears,
+ * leaving indented naked lines. This post's numbered intake stack and its
+ * three bullet lists all render unmarked without these rules.
+ *
+ * The durable fix belongs upstream in bip-kit/styles.css — this hits every
+ * Tailwind consumer of the renderer, not just us. Drop these two rules once
+ * a bip-kit release declares the list types itself.
+ */
+.bp-article .bp-ul {
+  list-style-type: disc;
+}
+
+.bp-article .bp-ol {
+  list-style-type: decimal;
+}
