@@ -8,12 +8,13 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 interface Submission {
   id: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   submittedAt: string;
 }
 
 const SubmissionsPage = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams();
@@ -44,6 +45,10 @@ const SubmissionsPage = () => {
         }
         const data = await res.json();
         setSubmissions(data.submissions);
+        setTotal(data.pagination?.total ?? data.submissions.length);
+        // A filter that succeeds clears the previous failure; without this the
+        // page stayed on its error forever, with no way back.
+        setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -58,21 +63,24 @@ const SubmissionsPage = () => {
     return () => clearTimeout(debounceFetch);
   }, [formId, token, search, startDate, endDate]);
 
+  // Union of every row's keys: two submissions of the same form can carry
+  // different fields once the form is edited, and indexing cells by each row's
+  // own keys silently shifted values under the wrong column.
+  const dataColumns = Array.from(new Set(submissions.flatMap((s) => Object.keys(s.data))));
+  const tableHeaders = ['Submitted At', ...dataColumns];
+
   const downloadCSV = () => {
-    const headers =
-      submissions.length > 0 ? ['Submitted At', ...Object.keys(submissions[0].data)] : [];
+    const escapeCell = (value: unknown) => JSON.stringify(value == null ? '' : String(value));
     const csvRows = [
-      headers.join(','),
-      ...submissions.map((sub) => {
-        const row = [
-          new Date(sub.submittedAt).toLocaleString(),
-          ...headers.slice(1).map((header) => JSON.stringify(sub.data[header] || '')),
-        ];
-        return row.join(',');
-      }),
+      tableHeaders.map(escapeCell).join(','),
+      ...submissions.map((sub) =>
+        [
+          escapeCell(new Date(sub.submittedAt).toLocaleString()),
+          ...dataColumns.map((column) => escapeCell(sub.data[column] ?? '')),
+        ].join(','),
+      ),
     ];
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv' });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -81,18 +89,14 @@ const SubmissionsPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const tableHeaders =
-    submissions.length > 0 ? ['Submitted At', ...Object.keys(submissions[0].data)] : [];
-
-  if (loading) return <div className="p-8">Loading submissions...</div>;
-  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
-
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Form Submissions</h1>
 
-        {/* Filter and Export Controls */}
+        {/* Filter and Export Controls — always mounted. Unmounting them while
+            loading stole focus from the search box on every debounced keystroke,
+            and left an error state with no way to change the filters. */}
         <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex flex-col md:flex-row gap-4 items-center">
           <input
             type="search"
@@ -131,44 +135,62 @@ const SubmissionsPage = () => {
           </button>
         </div>
 
-        {submissions.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  {tableHeaders.map((header) => (
-                    <th
-                      key={header}
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                    >
-                      {header.replace(/_/g, ' ')}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {submissions.map((submission) => (
-                  <tr key={submission.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(submission.submittedAt).toLocaleString()}
-                    </td>
-                    {Object.keys(submission.data).map((key) => (
-                      <td
-                        key={key}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200"
+        {error ? (
+          <div className="py-16 text-center text-red-500">Error: {error}</div>
+        ) : loading ? (
+          <div className="py-16 text-center text-gray-500">Loading submissions...</div>
+        ) : submissions.length > 0 ? (
+          <>
+            {total > submissions.length && (
+              // Never a silent cap: say so when the export and table hold less
+              // than the filter matched.
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                Showing the {submissions.length} most recent of {total} matching submissions — the
+                CSV export covers these {submissions.length}. Narrow the filters to see the rest.
+              </p>
+            )}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    {tableHeaders.map((header) => (
+                      <th
+                        key={header}
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                       >
-                        {String(submission.data[key])}
-                      </td>
+                        {header.replace(/_/g, ' ')}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {submissions.map((submission) => (
+                    <tr key={submission.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(submission.submittedAt).toLocaleString()}
+                      </td>
+                      {dataColumns.map((column) => (
+                        <td
+                          key={column}
+                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200"
+                        >
+                          {submission.data[column] == null ? '' : String(submission.data[column])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         ) : (
           <div className="text-center py-16">
-            <p className="text-gray-500">This form has no submissions yet.</p>
+            <p className="text-gray-500">
+              {search || startDate || endDate
+                ? 'No submissions match these filters.'
+                : 'This form has no submissions yet.'}
+            </p>
           </div>
         )}
       </div>
