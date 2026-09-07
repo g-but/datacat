@@ -28,6 +28,25 @@ const eslintConfig = [
       'react/no-unescaped-entities': 'warn',
       '@next/next/no-img-element': 'warn',
       'react/jsx-no-undef': 'error',
+      // Route params are a Promise in Next 15+. A dev server hides that behind
+      // a proxy that still answers sync reads, so `ctx.params.id` works
+      // locally and is `undefined` in production — where Prisma reads it as
+      // "no filter" and happily returns someone else's row. Four route
+      // handlers shipped that way before anyone noticed; use
+      // `getRouteParam(ctx, 'id')` from @/lib/routeParams instead.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'MemberExpression[object.property.name="params"]',
+          message:
+            'Route params are async in Next 15+: use `await getRouteParam(ctx, ...)` from @/lib/routeParams, not a sync read.',
+        },
+        {
+          selector: 'TSAsExpression > MemberExpression[property.name="params"]',
+          message:
+            'Route params are async in Next 15+: use `await getRouteParam(ctx, ...)` from @/lib/routeParams, not a sync cast.',
+        },
+      ],
     },
   },
 ];

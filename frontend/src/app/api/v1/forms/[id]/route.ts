@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/db';
 import { getAuthUserFromRequest } from '@/lib/auth';
+import { getRouteParam, type RouteContext } from '@/lib/routeParams';
 
-export async function PUT(req: Request, ctx: any) {
-  const { id } = ctx.params as { id: string };
+export async function PUT(req: Request, ctx: RouteContext<'id'>) {
+  const id = await getRouteParam(ctx, 'id');
+  if (!id) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
   const user = await getAuthUserFromRequest(req);
   if (!user) return Response.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   const body = await req.json();
@@ -35,8 +37,9 @@ export async function PUT(req: Request, ctx: any) {
   });
 }
 
-export async function DELETE(req: Request, ctx: any) {
-  const { id } = ctx.params as { id: string };
+export async function DELETE(req: Request, ctx: RouteContext<'id'>) {
+  const id = await getRouteParam(ctx, 'id');
+  if (!id) return Response.json({ success: false, message: 'Not found' }, { status: 404 });
   const user = await getAuthUserFromRequest(req);
   if (!user) return Response.json({ success: false, message: 'Unauthorized' }, { status: 401 });
   const found = await prisma.form.findFirst({ where: { id, userId: user.id } });
