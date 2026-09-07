@@ -23,4 +23,3 @@ yarn.lock
 # Generated during the build CI runs before format:check, so it never exists
 # locally at check time. Contentlayer output also uses import assertions,
 # which prettier cannot parse.
-.contentlayer

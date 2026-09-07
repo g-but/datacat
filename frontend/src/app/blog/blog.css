@@ -1,0 +1,72 @@
+/*
+ * datacat tokens → bip-kit's --bp-* theming contract, for the blog only
+ * (/blog and /blog/[slug] import this, not globals.css).
+ *
+ * The article used to carry `prose prose-indigo dark:prose-invert` with no
+ * @tailwindcss/typography plugin installed, so those classes matched nothing:
+ * the post rendered as unstyled browser defaults — full-width lines, no
+ * rhythm, no code styling. bip-kit's stylesheet supplies the typography, and
+ * the mapping below points it at datacat's palette.
+ *
+ * datacat's dark mode is `prefers-color-scheme` (Tailwind v4's default `dark:`
+ * variant — no class toggle, no data-theme anywhere in the app), which is
+ * exactly the axis bip-kit's own defaults switch on. So BOTH themes are
+ * mapped here rather than pinned, and the article darkens with the page.
+ *
+ * The selector lists mirror bip-kit/styles.css: it defines its neutral
+ * defaults on `:root`, on `[data-theme="dark"]`, and — inside a
+ * prefers-color-scheme media query — on `:root:not([data-theme="light"])`,
+ * which outranks a bare `:root`. Matching each selector and loading after
+ * styles.css makes this mapping win in every combination.
+ *
+ * Values are the Tailwind steps the blog index already uses for the same
+ * roles, so a card and the article it links to agree.
+ */
+@import 'bip-kit/styles.css';
+
+:root {
+  --bp-font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --bp-font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --bp-bg: #f9fafb; /* gray-50 — the blog index ground */
+  --bp-surface: #ffffff; /* white — cards, code frames */
+  --bp-fg: #111827; /* gray-900 — headings */
+  --bp-fg-muted: #4b5563; /* gray-600 — body copy */
+  --bp-fg-faint: #9ca3af; /* gray-400 — captions, TOC label */
+  --bp-border: #e5e7eb; /* gray-200 */
+
+  --bp-accent: #4f46e5; /* indigo-600 — links, active TOC, progress */
+  --bp-accent-contrast: #ffffff;
+
+  --bp-note: #1d4ed8; /* blue-700 */
+  --bp-note-bg: #eff6ff; /* blue-50 */
+  --bp-tip: #15803d; /* green-700 */
+  --bp-tip-bg: #f0fdf4; /* green-50 */
+  --bp-warn: #a16207; /* yellow-700 */
+  --bp-warn-bg: #fefce8; /* yellow-50 */
+  --bp-danger: #b91c1c; /* red-700 */
+  --bp-danger-bg: #fef2f2; /* red-50 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bp-bg: #111827; /* gray-900 — dark:bg-gray-900 on the index */
+    --bp-surface: #1f2937; /* gray-800 — dark:bg-gray-800 cards */
+    --bp-fg: #ffffff;
+    --bp-fg-muted: #9ca3af; /* gray-400 */
+    --bp-fg-faint: #6b7280; /* gray-500 */
+    --bp-border: #374151; /* gray-700 */
+
+    --bp-accent: #818cf8; /* indigo-400 — the dark: link colour */
+    --bp-accent-contrast: #111827;
+
+    --bp-note: #93c5fd;
+    --bp-note-bg: rgb(30 58 138 / 0.2); /* dark:bg-blue-900/20 */
+    --bp-tip: #86efac;
+    --bp-tip-bg: rgb(20 83 45 / 0.2);
+    --bp-warn: #fde047;
+    --bp-warn-bg: rgb(113 63 18 / 0.2);
+    --bp-danger: #fca5a5;
+    --bp-danger-bg: rgb(127 29 29 / 0.2);
+  }
+}

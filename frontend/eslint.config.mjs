@@ -12,10 +12,11 @@ const compat = new FlatCompat({
 const eslintConfig = [
   // `next lint` applied these ignores implicitly. Next 16 removed the
   // `next lint` subcommand entirely, so running `eslint .` directly needs
-  // them spelled out or it lints generated/build output (.next,
-  // .contentlayer) that was never meant to be linted.
+  // them spelled out or it lints build output that was never meant to be
+  // linted. (`.contentlayer/**` used to be in this list; posts are read from
+  // disk now, so there is no generated content package to skip.)
   {
-    ignores: ['.next/**', '.contentlayer/**', 'next-env.d.ts', 'node_modules/**'],
+    ignores: ['.next/**', 'next-env.d.ts', 'node_modules/**'],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
