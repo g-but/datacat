@@ -246,7 +246,7 @@ networks:
 
 ### GitHub Actions Workflows (actual):
 - **CI** (`.github/workflows/ci.yml`): frontend `verify` — Prettier format check, ESLint, TypeScript, Vitest unit suite, production build
-- **Auto-merge** (`.github/workflows/auto-merge.yml`): merges green, ready PRs via `scripts/ci/auto-merge-sweep.sh` (the policy lives in that script)
+- **Auto-merge** (`.github/workflows/auto-merge.yml`): merges green, ready PRs by calling the fleet-wide reusable sweep, `bitbaum/fleet/.github/workflows/auto-merge-sweep.yml@main`. The policy lives there, once, for every repo — this repo's local copy of the script was deleted, so a fix to the sweep now reaches here automatically.
 - **Deploy** (`.github/workflows/deploy.yml`): push to `main` → the fleet's `selfhost-deploy` workflow ships the app to the Hetzner box (bitbaum, behind Caddy) after this commit's CI is green
 - The full-stack Playwright E2E is deferred (needs both servers plus a seeded DB) — run it manually
 
