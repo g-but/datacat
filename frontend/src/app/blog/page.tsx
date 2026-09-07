@@ -1,15 +1,16 @@
-'use client';
-
 // created_date: 2025-07-09
-// last_modified_date: 2025-07-09
-// last_modified_summary: "Erste Blog-Seite mit Platzhalterartikel hinzugefügt."
+// last_modified_date: 2026-09-07
+// last_modified_summary: "Reads the markdown collection instead of contentlayer's generated package; no longer a client component."
 
 import Link from 'next/link';
-import { allPosts } from '../../../.contentlayer/generated';
 import Image from 'next/image';
+import { allPosts } from '@/lib/blog';
 
+// A server component again: the posts come off disk, so nothing here needs
+// to run in the browser. As a client component it shipped the whole index —
+// list, sort and all — to every reader.
 export default function BlogPage() {
-  const posts = allPosts.sort((a, b) => Number(new Date(b.date)) - Number(new Date(a.date)));
+  const posts = allPosts();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -39,7 +40,7 @@ export default function BlogPage() {
       <section className="mx-auto max-w-5xl px-6 py-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
           <article
-            key={post._id}
+            key={post.slug}
             className="group relative rounded-xl bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition overflow-hidden"
           >
             {post.coverImage && (

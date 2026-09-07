@@ -1,8 +1,7 @@
 ---
 created_date: 2025-07-10
-last_modified_date: 2025-07-10
-last_modified_summary: 'Initial migration of intake-engine article to MDX with richer content and infographic.'
-
+last_modified_date: 2026-09-07
+last_modified_summary: 'Converted from MDX to plain markdown for the bip-kit renderer: the Callout component became GitHub callout syntax, the Infographic component a captioned figure.'
 title: 'Vom Rohdatenfluss zur smarten Entscheidung – unsere Data-Intake-Journey'
 date: '2025-07-10'
 summary: 'Warum Datenaufnahme der Grundstein jeder Analyse ist – und wie wir sie mit Formularen, Streams und AI meistern.'
@@ -10,24 +9,17 @@ coverImage: '/images/blog/intake-engine/cover.jpg'
 tags: ['data-ingestion', 'form-builder', 'llm']
 ---
 
-import { Callout, Infographic } from '@/components/MDXComponents';
-
 ## Einleitung
 
-Daten sind das Öl des 21.&nbsp;Jahrhunderts – ein abgedroschener Satz, doch ohne Frage wahr.  
+Daten sind das Öl des 21. Jahrhunderts – ein abgedroschener Satz, doch ohne Frage wahr.
 Rohdaten _alleine_ bringen jedoch keinen Motor zum Laufen. Erst wenn Informationen **bequem erfasst**, **intelligent analysiert** und schliesslich in **wirkungsvollen Aktionen** münden, entsteht echter Mehrwert.
 
-<Callout type="tip">
-  Wussten Sie, dass bereits **37 %** aller Datenprojekte am fehlenden Input scheitern? _Garbage in,
-  garbage out_ gilt heute mehr denn je.
-</Callout>
+> [!TIP]
+> Wussten Sie, dass bereits **37 %** aller Datenprojekte am fehlenden Input scheitern? _Garbage in, garbage out_ gilt heute mehr denn je.
 
 ## Unser Intake-Stack auf einen Blick
 
-<Infographic
-  src="/images/blog/intake-engine/pipeline.svg"
-  caption="Vom Formular über Streams bis zur KI – der Weg unserer Daten"
-/>
+![Vom Formular über Streams bis zur KI – der Weg unserer Daten](/images/blog/intake-engine/pipeline.svg "Vom Formular über Streams bis zur KI – der Weg unserer Daten")
 
 1. **Formulare** – schnell per Drag-and-Drop gebaut, perfekt für menschlichen Input.
 2. **Sensor- & API-Streams** – alles, was sich sekündlich ändert, landet in unserem Event-Bus.

@@ -13,7 +13,6 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml ./frontend/
 COPY backend/package.json backend/pnpm-lock.yaml backend/pnpm-workspace.yaml ./backend/
-ENV SKIP_CONTENTLAYER=true
 RUN pnpm install --frozen-lockfile
 RUN cd frontend && pnpm install --frozen-lockfile
 RUN cd backend && pnpm install --frozen-lockfile

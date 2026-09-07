@@ -169,7 +169,6 @@ jobs:
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_BRAND_PRESET=generic
           NEXT_TELEMETRY_DISABLED=1
-          SKIP_CONTENTLAYER=false
           EOF
 
       - name: Build Docker images

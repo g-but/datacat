@@ -3,15 +3,25 @@ allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
   '@tailwindcss/oxide': true
-  contentlayer: true
   esbuild: true
   prisma: true
   protobufjs: true
   unrs-resolver: true
+
 overrides:
+  # deepmerge-ts arrives via @prisma/config, so this pin stays.
   deepmerge-ts@<8.0.0: ^8.0.0
   esbuild@<=0.24.2: ^0.25.0
-  estree-util-value-to-estree@<3.3.3: ^3.3.3
-  toml@<4.1.2: ^4.1.2
-  toml@<4.2.0: ^4.2.0
   uuid@<11.1.1: ^11.1.1
+  # The estree-util-value-to-estree and toml pins that used to sit here
+  # existed only because contentlayer pulled remark-mdx-frontmatter. With
+  # contentlayer gone, nothing in the tree depends on either package, so the
+  # pins pinned nothing.
+
+# pnpm refuses packages published inside its minimum-release-age window — a
+# supply-chain guard against a compromised release being installed before
+# anyone notices. bip-kit is our own package (bitbaum/bip-kit), published
+# hours before this commit, so it needs an explicit exemption. Add lines only
+# for packages we publish ourselves — never to hurry a third-party release.
+minimumReleaseAgeExclude:
+  - 'bip-kit'
