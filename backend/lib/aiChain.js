@@ -47,21 +47,25 @@ async function getAIHealth() {
 }
 
 /**
- * The chain's usable links, one per vendor (a second model at the same vendor
- * draws on the same daily budget, so it is not a real fallback — see ai-kit's
- * chain.ts). Returns [] when no AI_GROQ_API_KEY-equivalent (GROQ_API_KEY /
- * OPENROUTER_API_KEY) is configured at all.
+ * The chain's usable links. Returns [] when neither GROQ_API_KEY nor
+ * OPENROUTER_API_KEY is configured.
+ *
+ * THE PER-VENDOR DEDUPE THAT USED TO BE HERE IS GONE, and its removal is the
+ * point rather than a tidy-up. It kept one link per vendor on the reasoning
+ * that "a second model at the same vendor draws on the same daily budget, so
+ * it is not a real fallback". That is true of the DAILY case and only of the
+ * daily case — and it threw away the retry that rescues the two failures that
+ * actually happen more often: a model id the vendor retired, and a model that
+ * is momentarily busy while the rest of the vendor is fine.
+ *
+ * `complete()` makes the distinction per FAILURE KIND instead of up front: a
+ * daily 429 condemns the whole vendor (so the dedupe's real benefit is kept),
+ * while a 404 or a capacity 429 demotes to that vendor's next model. Strictly
+ * more chain, not less.
  */
 async function getChainLinks() {
   const { freeChain, usableChain } = await loadAIKit();
-  const links = usableChain(freeChain('DATACAT'), process.env);
-
-  const seen = new Set();
-  return links.filter((link) => {
-    if (seen.has(link.provider.id)) return false;
-    seen.add(link.provider.id);
-    return true;
-  });
+  return usableChain(freeChain('DATACAT'), process.env);
 }
 
 /** True if at least one free-tier vendor key is configured. */
@@ -96,57 +100,54 @@ function parseJSONLoose(content) {
  * every configured vendor refused — callers decide whether that means "skip
  * this analysis" or "surface an error," matching how the pre-chain code
  * already handled a missing OPENAI_API_KEY per call site.
+ *
+ * ── What `complete()` brought that the hand-rolled `attempt` could not ──────
+ * The loop below used to end at `chat failed (${res.status}): ${detail}` — the
+ * response body was fetched, sliced to 200 characters, and read by nothing.
+ * The three kinds of HTTP 429 share that status code and want OPPOSITE
+ * responses, and only that body tells them apart:
+ *
+ *   capacity — a burst. Demoting to the next link is right.
+ *   daily    — the vendor's whole org-wide budget is spent, so every other
+ *              model there is already dead. The vendor is skipped for the rest
+ *              of the walk instead of being asked once per model.
+ *   size     — one request exceeded the per-minute allowance by itself. The
+ *              next model down has a SMALLER ceiling, so demoting is strictly
+ *              worse; the walk stops and the caller is told to send less.
+ *
+ * It also gives each link its own deadline. The old `fetch` had none at all,
+ * so a vendor that accepted the connection and never answered held an ingestion
+ * job open indefinitely — and the fallback beneath it was never reached.
  */
 async function chatText({ system, prompt, temperature = 0.3, maxTokens = 2000 }) {
-  const { tryChain, chainFrom } = await loadAIKit();
+  const { complete } = await loadAIKit();
   const chain = await getChainLinks();
   const tracker = await getHealthTracker();
 
-  return tryChain(chain, {
+  const result = await complete({
+    chain,
     health: tracker,
+    temperature,
+    maxTokens,
+    messages: system
+      ? [
+          { role: 'system', content: system },
+          { role: 'user', content: prompt },
+        ]
+      : [{ role: 'user', content: prompt }],
     onLinkFailure: (link, error) => {
       console.warn(
         `AI chain link failed (${link.provider.id}/${link.model}):`,
         error instanceof Error ? error.message : error,
       );
     },
-    attempt: async (link) => {
-      const [resolved] = chainFrom(undefined, [link]);
-      const res = await fetch(`${link.provider.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env[link.provider.keyEnv] ?? ''}`,
-        },
-        body: JSON.stringify({
-          model: resolved?.model ?? link.model,
-          temperature,
-          max_tokens: maxTokens,
-          messages: system
-            ? [
-                { role: 'system', content: system },
-                { role: 'user', content: prompt },
-              ]
-            : [{ role: 'user', content: prompt }],
-        }),
-      });
-
-      if (!res.ok) {
-        const detail = await res.text().catch(() => '');
-        throw new Error(`${link.provider.id} chat failed (${res.status}): ${detail.slice(0, 200)}`);
-      }
-
-      const body = await res.json();
-      const text = body.choices?.[0]?.message?.content;
-      if (!text) throw new Error(`${link.provider.id} returned no content`);
-
-      return {
-        content: text,
-        model: `${link.provider.id}/${resolved?.model ?? link.model}`,
-        usage: body.usage,
-      };
-    },
   });
+
+  return {
+    content: result.text,
+    model: result.id,
+    usage: result.raw?.usage,
+  };
 }
 
 /** Same as `chatText`, but parses the response as JSON (leniently). */
