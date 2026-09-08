@@ -34,7 +34,7 @@
     "test:e2e:debug": "pnpm exec playwright test --debug",
     "test:e2e:headed": "pnpm exec playwright test --headed",
     "test:e2e:report": "pnpm exec playwright show-report",
-    "typecheck": "cd frontend && pnpm exec tsc --noEmit",
+    "typecheck": "cd frontend && pnpm run prisma:generate && pnpm exec tsc --noEmit",
     "verify": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
     "format": "cd frontend && pnpm run format",
     "format:check": "cd frontend && pnpm run format:check"
