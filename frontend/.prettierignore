@@ -24,6 +24,8 @@ yarn.lock
 test-results
 playwright-report
 
-# Generated during the build CI runs before format:check, so it never exists
-# locally at check time. Contentlayer output also uses import assertions,
-# which prettier cannot parse.
+# .contentlayer used to be listed here. #254 replaced contentlayer with bip-kit
+# and deleted the entry — correctly, the tool is gone — but the directory it
+# generated survives in any checkout that built the blog before then, and
+# prettier cannot parse its import assertions. `pnpm run preflight` finds and
+# removes those leftovers; nothing needs to be ignored here.

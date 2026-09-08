@@ -2,7 +2,7 @@
 
 # Preflight: make the working copy match reality before any work starts.
 #
-# Why this exists: three separate sessions burned part of a run repairing the
+# Why this exists: session after session burned part of a run repairing the
 # same class of entry-time drift, each time discovering it the hard way —
 #   2026-08-29  local main held a commit origin never got; `git pull --ff-only`
 #               failed for every run entering the repo.
@@ -18,6 +18,9 @@
 #               check a silent no-op for both packages, so a checkout still
 #               holding the old npm-flat node_modules — five commits and a
 #               package-manager migration stale — reported "clean".
+#   2026-09-08  #254 removed contentlayer and its ignore entry; the generated
+#               directory it left behind was suddenly in prettier's scope, and
+#               `pnpm run verify` exited 2 on an unmodified main.
 # A bare `git status` reports "clean" in all these cases. This closes the class.
 #
 # Usage: pnpm run preflight   (read-only by default)
@@ -106,6 +109,34 @@ for pkg in frontend backend; do
     ok "$pkg/node_modules matches lockfile"
   fi
 done
+
+# 4. Generated output belonging to tooling the repo no longer has. When a tool
+#    is removed, its ignore entries go with it — so the directory it left behind
+#    stops being ignored and starts being *linted and formatted*. `git status`
+#    calls it untracked, `verify` dies at its first gate, and the error names
+#    the generated file rather than the removal that stranded it.
+#      2026-09-08  #254 replaced contentlayer with bip-kit and deleted the
+#                  `.contentlayer` line from frontend/.prettierignore. Every
+#                  checkout that had ever built the blog still held
+#                  frontend/.contentlayer, whose import assertions prettier
+#                  cannot parse — `verify` exited 2 on main with nothing wrong
+#                  in the repo. Two checkouts here had it, including a worktree.
+#    Worktrees are checked too: each has its own copy, and its own red verify.
+dead_output=()
+while read -r wt _; do
+  [[ -d "$wt/frontend/.contentlayer" ]] && dead_output+=("$wt/frontend/.contentlayer")
+done < <(git worktree list)
+
+if ((${#dead_output[@]})); then
+  warn "generated output from removed tooling: ${dead_output[*]#"$PROJECT_ROOT"/}"
+  if [[ $FIX == 1 ]]; then
+    for d in "${dead_output[@]}"; do
+      rm -rf "$d" && note "removed ${d#"$PROJECT_ROOT"/}"
+    done
+  fi
+else
+  ok "no output from removed tooling"
+fi
 
 if [[ $drift == 1 && $FIX == 0 ]]; then
   printf '\n%s\n' "${YELLOW}Drift found. Re-run with:${NC} pnpm run preflight --fix"
